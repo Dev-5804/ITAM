@@ -47,6 +47,7 @@ export interface Tool {
   id: string
   organization_id: string
   name: string
+  url: string
   description: string | null
   category: string | null
   status: string
