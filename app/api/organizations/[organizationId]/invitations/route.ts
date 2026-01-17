@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { isAdminOrOwner, checkSubscriptionLimits } from '@/lib/rbac'
 import { createAuditLog } from '@/lib/audit'
-import { randomBytes } from 'crypto'
+import crypto from 'crypto'
 
 export async function POST(
   request: Request,
@@ -43,21 +43,29 @@ export async function POST(
       )
     }
 
-    // Check if user already has membership
-    const { data: existingMembership } = await supabase
-      .from('memberships')
+    // Check if invitee already has a user account and membership
+    const { data: inviteeUser } = await supabase
+      .from('profiles')
       .select('id')
-      .eq('organization_id', organizationId)
-      .eq('user_id', user.id)
-      .is('deleted_at', null)
+      .eq('email', email.toLowerCase())
       .single()
 
-    if (existingMembership) {
-      return Response.json({ error: 'User already has membership' }, { status: 400 })
+    if (inviteeUser) {
+      const { data: existingMembership } = await supabase
+        .from('memberships')
+        .select('id')
+        .eq('organization_id', organizationId)
+        .eq('user_id', inviteeUser.id)
+        .is('deleted_at', null)
+        .single()
+
+      if (existingMembership) {
+        return Response.json({ error: 'User already has membership' }, { status: 400 })
+      }
     }
 
     // Generate invitation token
-    const token = randomBytes(32).toString('hex')
+    const token = crypto.randomBytes(32).toString('hex')
     const expiresAt = new Date()
     expiresAt.setDate(expiresAt.getDate() + 7) // 7 days expiry
 
