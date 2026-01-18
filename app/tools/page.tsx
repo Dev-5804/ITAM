@@ -5,6 +5,7 @@ import { useOrganization } from '@/lib/context/organization-context'
 import { useRouter } from 'next/navigation'
 import { RoleGuard } from '@/components/role-guard'
 import type { Tool } from '@/lib/types/database'
+import { Search, Filter, Plus, Wrench, Archive, ChevronRight, Shield, Building2 } from 'lucide-react'
 
 export default function ToolsPage() {
   const { currentOrganization } = useOrganization()
@@ -83,185 +84,211 @@ export default function ToolsPage() {
 
   if (!currentOrganization) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-gray-600">Please select an organization</p>
+      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-black">
+        <p className="text-black dark:text-white font-black text-xl">Please select an organization</p>
       </div>
     )
   }
 
+  const getStatusStyles = (status: string) => {
+    if (status === 'ACTIVE') {
+      return 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-500'
+    }
+    return 'bg-neutral-100 dark:bg-neutral-800 text-black dark:text-white border-neutral-300 dark:border-neutral-700'
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Tools</h1>
-            <p className="mt-2 text-sm text-gray-600">
-              Manage tools in {currentOrganization.name}
-            </p>
+    <div className="p-8">
+      {/* Page Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-black dark:text-white mb-2">Tools</h1>
+          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+            Manage tools in {currentOrganization.name}
+          </p>
+        </div>
+        <RoleGuard allowedRoles={['OWNER', 'ADMIN']}>
+          <button
+            onClick={() => router.push('/tools/create')}
+            className="flex items-center gap-2 px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg text-sm font-medium hover:opacity-90"
+          >
+            <Plus className="w-4 h-4" />
+            Add Tool
+          </button>
+        </RoleGuard>
+      </div>
+
+      {/* Search and Filter */}
+      {!loading && tools.length > 0 && (
+        <div className="mb-6 flex gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+            <input
+              type="text"
+              placeholder="Search tools..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg text-sm text-black dark:text-white placeholder:text-neutral-400 focus:outline-none focus:border-neutral-400 dark:focus:border-neutral-600"
+            />
           </div>
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg text-sm text-black dark:text-white focus:outline-none focus:border-neutral-400 dark:focus:border-neutral-600"
+          >
+            <option value="all">All Categories</option>
+            {categories.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* Error */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
+        </div>
+      )}
+
+      {/* Loading */}
+      {loading && (
+        <div className="text-center py-12">
+          <div className="inline-block w-8 h-8 border-2 border-neutral-200 dark:border-neutral-800 border-t-black dark:border-t-white rounded-full animate-spin"></div>
+          <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-4">Loading tools...</p>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!loading && tools.length === 0 && (
+        <div className="text-center py-12 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg">
+          <Wrench className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-black dark:text-white mb-2">No tools yet</h3>
+          <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
+            Get started by creating your first tool.
+          </p>
           <RoleGuard allowedRoles={['OWNER', 'ADMIN']}>
             <button
               onClick={() => router.push('/tools/create')}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg text-sm font-medium hover:opacity-90"
             >
-              + Add Tool
+              <Plus className="w-4 h-4" />
+              Add Tool
             </button>
           </RoleGuard>
         </div>
+      )}
 
-        {/* Search and Filter */}
-        {!loading && tools.length > 0 && (
-          <div className="mb-6 flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <input
-                type="text"
-                placeholder="Search tools by name or description..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            <div className="sm:w-48">
-              <select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="all">All Categories</option>
-                {categories.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        )}
+      {/* No Results from Filter */}
+      {!loading && tools.length > 0 && filteredTools.length === 0 && (
+        <div className="text-center py-12 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg">
+          <Search className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-black dark:text-white mb-2">No results found</h3>
+          <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
+            No tools match your search criteria.
+          </p>
+          <button
+            onClick={() => {
+              setSearchQuery('')
+              setCategoryFilter('all')
+            }}
+            className="px-4 py-2 bg-neutral-100 dark:bg-neutral-800 text-black dark:text-white rounded-lg text-sm font-medium hover:bg-neutral-200 dark:hover:bg-neutral-700"
+          >
+            Clear filters
+          </button>
+        </div>
+      )}
 
-        {/* Error */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
-            {error}
-          </div>
-        )}
-
-        {/* Loading */}
-        {loading && (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <p className="mt-2 text-gray-600">Loading tools...</p>
-          </div>
-        )}
-
-        {/* Empty State */}
-        {!loading && tools.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-lg shadow">
-            <svg
-              className="mx-auto h-12 w-12 text-gray-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-              />
-            </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No tools</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              Get started by creating a new tool.
-            </p>
-            <RoleGuard allowedRoles={['OWNER', 'ADMIN']}>
-              <div className="mt-6">
-                <button
-                  onClick={() => router.push('/tools/create')}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
-                >
-                  + Add Tool
-                </button>
-              </div>
-            </RoleGuard>
-          </div>
-        )}
-
-        {/* No Results from Filter */}
-        {!loading && tools.length > 0 && filteredTools.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-lg shadow">
-            <p className="text-gray-600">No tools match your search criteria.</p>
-            <button
-              onClick={() => {
-                setSearchQuery('')
-                setCategoryFilter('all')
-              }}
-              className="mt-4 text-blue-600 hover:text-blue-500 font-medium"
-            >
-              Clear filters
-            </button>
-          </div>
-        )}
-
-        {/* Tools Grid */}
-        {!loading && filteredTools.length > 0 && (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredTools.map((tool) => (
-              <div
-                key={tool.id}
-                className="bg-white rounded-lg shadow hover:shadow-md transition-shadow"
-              >
-                <div className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        {tool.name}
-                      </h3>
-                      {tool.category && (
-                        <span className="inline-flex items-center mt-2 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {tool.category}
-                        </span>
-                      )}
+      {/* Tools Table */}
+      {!loading && filteredTools.length > 0 && (
+        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-neutral-50 dark:bg-black border-b border-neutral-200 dark:border-neutral-800">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
+                  Tool Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
+                  Category
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
+                  Active Accesses
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-semibold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
+              {filteredTools.map((tool) => (
+                <tr key={tool.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                        <Wrench className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-black dark:text-white">{tool.name}</p>
+                        {tool.description && (
+                          <p className="text-xs text-neutral-600 dark:text-neutral-400 line-clamp-1">
+                            {tool.description}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        tool.status === 'ACTIVE'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}
-                    >
+                  </td>
+                  <td className="px-6 py-4">
+                    {tool.category ? (
+                      <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
+                        {tool.category}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-neutral-400">—</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                      tool.status === 'ACTIVE'
+                        ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+                        : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300'
+                    }`}>
                       {tool.status}
                     </span>
-                  </div>
-
-                  {tool.description && (
-                    <p className="mt-3 text-sm text-gray-600 line-clamp-2">
-                      {tool.description}
-                    </p>
-                  )}
-
-                  <div className="mt-4 flex items-center justify-between">
-                    <button
-                      onClick={() => router.push(`/tools/${tool.id}`)}
-                      className="text-sm font-medium text-blue-600 hover:text-blue-500"
-                    >
-                      View Details →
-                    </button>
-                    <RoleGuard allowedRoles={['OWNER', 'ADMIN']}>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="text-sm text-neutral-900 dark:text-neutral-100">0</span>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex items-center justify-end gap-2">
                       <button
-                        onClick={() => handleArchive(tool.id)}
-                        className="text-sm font-medium text-red-600 hover:text-red-500"
+                        onClick={() => router.push(`/tools/${tool.id}`)}
+                        className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg"
+                        title="View details"
                       >
-                        Archive
+                        <ChevronRight className="w-4 h-4" />
                       </button>
-                    </RoleGuard>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+                      <RoleGuard allowedRoles={['OWNER', 'ADMIN']}>
+                        <button
+                          onClick={() => handleArchive(tool.id)}
+                          className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+                          title="Archive tool"
+                        >
+                          <Archive className="w-4 h-4" />
+                        </button>
+                      </RoleGuard>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   )
 }

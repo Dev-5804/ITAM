@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { Mail, CheckCircle2, XCircle, Loader2, ArrowRight, Sparkles } from 'lucide-react'
 
 export default function AcceptInvitationPage() {
   const router = useRouter()
@@ -52,32 +53,20 @@ export default function AcceptInvitationPage() {
 
   if (!token) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-            <svg
-              className="h-6 w-6 text-red-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+      <div className="flex min-h-screen items-center justify-center bg-neutral-50 dark:bg-neutral-950 p-4">
+        <div className="max-w-md w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-8 text-center">
+          <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            <XCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
           </div>
-          <h2 className="mt-4 text-xl font-semibold text-gray-900">
+          <h2 className="text-2xl font-bold text-black dark:text-white mb-3">
             Invalid Invitation
           </h2>
-          <p className="mt-2 text-gray-600">
+          <p className="text-neutral-600 dark:text-neutral-400 mb-6">
             This invitation link is invalid or incomplete.
           </p>
           <button
             onClick={() => router.push('/dashboard')}
-            className="mt-6 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="w-full px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium hover:opacity-90"
           >
             Go to Dashboard
           </button>
@@ -88,30 +77,19 @@ export default function AcceptInvitationPage() {
 
   if (success) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-            <svg
-              className="h-6 w-6 text-green-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
+      <div className="flex min-h-screen items-center justify-center bg-neutral-50 dark:bg-neutral-950 p-4">
+        <div className="max-w-md w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-8 text-center">
+          <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+            <CheckCircle2 className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <h2 className="mt-4 text-xl font-semibold text-gray-900">
-            Invitation Accepted!
+          <h2 className="text-2xl font-bold text-black dark:text-white mb-3">
+            Welcome Aboard!
           </h2>
-          <p className="mt-2 text-gray-600">
-            You have successfully joined {organizationName}.
+          <p className="text-neutral-600 dark:text-neutral-400 mb-2">
+            You have successfully joined <span className="font-semibold text-black dark:text-white">{organizationName}</span>.
           </p>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-6 flex items-center justify-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin" />
             Redirecting to dashboard...
           </p>
         </div>
@@ -120,53 +98,66 @@ export default function AcceptInvitationPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full bg-white shadow rounded-lg p-8">
-        <div className="text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-            <svg
-              className="h-6 w-6 text-blue-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-              />
-            </svg>
-          </div>
-          <h2 className="mt-4 text-xl font-semibold text-gray-900">
-            Organization Invitation
-          </h2>
-          <p className="mt-2 text-gray-600">
-            You've been invited to join an organization. Click below to accept and
-            become a member.
-          </p>
-
-          {error && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-800 text-sm">
-              {error}
+    <div className="flex min-h-screen items-center justify-center bg-neutral-50 dark:bg-neutral-950 p-4">
+      <div className="max-w-md w-full">
+        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden">
+          {/* Header */}
+          <div className="bg-amber-500 p-8 text-center">
+            <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center mx-auto mb-4">
+              <Mail className="w-8 h-8 text-white" />
             </div>
-          )}
+            <h2 className="text-2xl font-bold text-black">
+              Organization Invitation
+            </h2>
+          </div>
 
-          <div className="mt-6 space-y-3">
-            <button
-              onClick={handleAccept}
-              disabled={loading}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Accepting...' : 'Accept Invitation'}
-            </button>
-            <button
-              onClick={() => router.push('/dashboard')}
-              disabled={loading}
-              className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium disabled:opacity-50"
-            >
-              Decline
-            </button>
+          {/* Content */}
+          <div className="p-8">
+            <p className="text-neutral-700 dark:text-neutral-300 text-center mb-6">
+              You've been invited to join an organization. Accept to become a member and start collaborating.
+            </p>
+
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-3">
+                <XCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                <p className="text-sm font-medium text-red-800 dark:text-red-300">{error}</p>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <button
+                onClick={handleAccept}
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-black dark:bg-white text-white dark:text-black rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Accepting...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-5 h-5" />
+                    Accept Invitation
+                  </>
+                )}
+              </button>
+              
+              <button
+                onClick={() => router.push('/dashboard')}
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-2 px-6 py-3 border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 rounded-lg font-semibold hover:bg-neutral-50 dark:hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Decline
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="mt-6 p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+              <p className="text-xs text-neutral-600 dark:text-neutral-400 text-center">
+                By accepting, you agree to collaborate within the organization and follow its access policies.
+              </p>
+            </div>
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { OrganizationProvider } from '@/lib/context/organization-context'
+import { DashboardLayout as Layout } from '@/components/dashboard-layout'
 
 export default async function DashboardLayout({
   children,
@@ -16,5 +17,9 @@ export default async function DashboardLayout({
     redirect('/login')
   }
 
-  return <OrganizationProvider>{children}</OrganizationProvider>
+  return (
+    <OrganizationProvider>
+      <Layout>{children}</Layout>
+    </OrganizationProvider>
+  )
 }

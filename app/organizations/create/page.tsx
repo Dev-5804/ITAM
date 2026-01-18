@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Building2, ArrowLeft, Sparkles, Zap } from 'lucide-react'
 
 export default function CreateOrganizationPage() {
   const [name, setName] = useState('')
@@ -51,74 +52,153 @@ export default function CreateOrganizationPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
-      <div className="w-full max-w-md">
-        <div className="bg-white shadow-lg rounded-lg p-8">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Create Organization</h1>
-            <p className="mt-2 text-sm text-gray-600">
-              Set up your organization to start managing tool access
-            </p>
+    <div className="flex min-h-screen bg-white dark:bg-black">
+      {/* Left side - Decorative */}
+      <div className="hidden lg:flex lg:w-2/5 bg-black p-12 flex-col justify-between relative overflow-hidden">
+        {/* Animated Background */}
+        <div className="absolute inset-0 dots-pattern opacity-20"></div>
+        <div className="absolute inset-0">
+          <div className="absolute top-20 right-20 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl animate-float"></div>
+          <div className="absolute bottom-20 left-20 w-80 h-80 bg-amber-500/5 rounded-full blur-3xl animate-float" style={{animationDelay: '2s'}}></div>
+        </div>
+        
+        <div className="relative z-10 animate-slide-in-left">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="relative">
+              <div className="absolute inset-0 bg-amber-500 rounded-2xl blur-lg opacity-50 animate-pulse-glow"></div>
+              <div className="relative p-4 bg-amber-500 rounded-2xl">
+                <Building2 className="w-8 h-8 text-black" />
+              </div>
+            </div>
           </div>
+          <h1 className="text-5xl font-black text-white mb-6 leading-tight">
+            Create Your<br />Organization
+          </h1>
+          <p className="text-xl text-gray-400 max-w-md leading-relaxed">
+            Set up your workspace to start managing tool access for your team.
+          </p>
+        </div>
 
-          {error && (
-            <div className="mb-4 rounded-md bg-red-50 p-4">
-              <p className="text-sm text-red-800">{error}</p>
+        <div className="relative z-10 space-y-6 animate-slide-up" style={{animationDelay: '0.2s'}}>
+          <div className="p-6 bg-neutral-900 rounded-2xl border border-neutral-800">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="p-2 bg-amber-500/10 rounded-lg">
+                <Zap className="w-5 h-5 text-amber-500" />
+              </div>
+              <div>
+                <h3 className="text-white font-bold text-lg mb-1">Quick Setup</h3>
+                <p className="text-gray-400 text-sm">Get started in seconds</p>
+              </div>
             </div>
-          )}
+            <p className="text-gray-300 text-sm leading-relaxed">
+              "ITAM has transformed how we manage internal tool access. The audit trail is invaluable for compliance."
+            </p>
+            <p className="text-gray-500 text-xs mt-3">— Platform Team Lead</p>
+          </div>
+        </div>
+      </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                Organization Name
-              </label>
-              <input
-                type="text"
-                id="name"
-                required
-                value={name}
-                onChange={(e) => handleNameChange(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                placeholder="Acme Inc"
-              />
-            </div>
+      {/* Right side - Form */}
+      <div className="flex-1 flex items-center justify-center p-8 bg-neutral-50 dark:bg-neutral-950 relative">
+        <div className="absolute inset-0 grid-pattern opacity-10"></div>
+        
+        <div className="w-full max-w-lg relative z-10">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-2 text-black dark:text-white hover:text-amber-600 dark:hover:text-amber-400 mb-10 transition-colors font-bold animate-slide-up"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>Back</span>
+          </button>
 
-            <div>
-              <label htmlFor="slug" className="block text-sm font-medium text-gray-700">
-                Organization Slug
-              </label>
-              <input
-                type="text"
-                id="slug"
-                required
-                value={slug}
-                onChange={(e) => setSlug(e.target.value)}
-                pattern="[a-z0-9-]+"
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono text-sm"
-                placeholder="acme-inc"
-              />
-              <p className="mt-1 text-xs text-gray-500">
-                Used in URLs. Only lowercase letters, numbers, and hyphens allowed.
+          <div className="bg-white dark:bg-neutral-900 rounded-3xl border-2 border-neutral-200 dark:border-neutral-800 p-10 animate-slide-up" style={{animationDelay: '0.1s'}}>
+            <div className="mb-8">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-amber-500/20 rounded-xl blur-md"></div>
+                  <div className="relative p-3 bg-amber-500 rounded-xl">
+                    <Sparkles className="w-6 h-6 text-black" />
+                  </div>
+                </div>
+                <h2 className="text-3xl font-black text-black dark:text-white">New Organization</h2>
+              </div>
+              <p className="text-gray-600 dark:text-gray-400 text-lg">
+                Create your organization to start managing tool access
               </p>
             </div>
 
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => router.back()}
-                className="flex-1 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex-1 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Creating...' : 'Create Organization'}
-              </button>
-            </div>
-          </form>
+            {error && (
+              <div className="mb-8 p-5 bg-red-50 dark:bg-red-900/20 border-2 border-red-500 rounded-2xl animate-scale-in">
+                <p className="font-black text-red-800 dark:text-red-300">{error}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label htmlFor="name" className="block text-sm font-black text-black dark:text-white mb-3 uppercase tracking-wider">
+                  Organization Name
+                  <span className="text-red-500 ml-1">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  required
+                  value={name}
+                  onChange={(e) => handleNameChange(e.target.value)}
+                  className="w-full px-5 py-4 bg-neutral-50 dark:bg-black border-2 border-neutral-300 dark:border-neutral-800 rounded-2xl text-black dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition-colors font-medium text-lg"
+                  placeholder="Acme Inc"
+                />
+                <p className="mt-3 text-sm text-gray-600 dark:text-gray-400 font-medium">
+                  The display name for your organization
+                </p>
+              </div>
+
+              <div>
+                <label htmlFor="slug" className="block text-sm font-black text-black dark:text-white mb-3 uppercase tracking-wider">
+                  Organization Slug
+                  <span className="text-red-500 ml-1">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    id="slug"
+                    required
+                    value={slug}
+                    onChange={(e) => setSlug(e.target.value)}
+                    pattern="[a-z0-9-]+"
+                    className="w-full px-5 py-4 bg-neutral-50 dark:bg-black border-2 border-neutral-300 dark:border-neutral-800 rounded-2xl text-black dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition-colors font-mono font-bold text-lg"
+                    placeholder="acme-inc"
+                  />
+                </div>
+                <p className="mt-3 text-sm text-gray-600 dark:text-gray-400 font-medium">
+                  Used in URLs. Only lowercase letters, numbers, and hyphens allowed.
+                </p>
+              </div>
+
+              <div className="pt-6 flex gap-4">
+                <button
+                  type="button"
+                  onClick={() => router.back()}
+                  className="flex-1 px-8 py-4 border-2 border-neutral-300 dark:border-neutral-800 bg-white dark:bg-black text-black dark:text-white rounded-2xl font-black text-lg hover:border-amber-500 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 px-8 py-4 bg-black dark:bg-white text-white dark:text-black rounded-2xl font-black text-lg hover-lift disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? 'Creating...' : 'Create Organization'}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div className="mt-8 text-center animate-slide-up" style={{animationDelay: '0.2s'}}>
+            <p className="text-gray-600 dark:text-gray-400">
+              You will be assigned as the <span className="font-black text-amber-600 dark:text-amber-400">Owner</span> with full permissions
+            </p>
+          </div>
         </div>
       </div>
     </div>

@@ -23,16 +23,38 @@ export async function GET(
   }
 
   try {
-    const { data: memberships, error } = await supabase
+    // Fetch memberships
+    const { data: memberships, error: membershipsError } = await supabase
       .from('memberships')
-      .select('*, user:profiles(*)')
+      .select('*')
       .eq('organization_id', organizationId)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
 
-    if (error) throw error
+    if (membershipsError) throw membershipsError
 
-    return Response.json({ memberships })
+    // Fetch profiles for all user_ids
+    const userIds = memberships?.map((m) => m.user_id) || []
+    
+    if (userIds.length === 0) {
+      return Response.json({ memberships: [] })
+    }
+
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('*')
+      .in('id', userIds)
+
+    if (profilesError) throw profilesError
+
+    // Map profiles to memberships
+    const profileMap = new Map(profiles?.map((p) => [p.id, p]) || [])
+    const membershipsWithProfiles = memberships?.map((membership) => ({
+      ...membership,
+      user: profileMap.get(membership.user_id) || null,
+    }))
+
+    return Response.json({ memberships: membershipsWithProfiles })
   } catch (error: any) {
     console.error('Error fetching memberships:', error)
     return Response.json({ error: error.message }, { status: 500 })
