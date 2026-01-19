@@ -8,3 +8,8 @@ CREATE POLICY "Users can accept their own invitations"
   ON invitations FOR UPDATE
   USING (email ILIKE auth.email())
   WITH CHECK (email ILIKE auth.email());
+
+-- Allow users to delete invitations sent to them (for declining)
+CREATE POLICY "Users can decline their own invitations"
+  ON invitations FOR DELETE
+  USING (email ILIKE auth.email());

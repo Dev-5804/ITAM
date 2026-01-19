@@ -67,6 +67,12 @@ export default function InvitationsPage() {
       const data = await response.json()
 
       if (!response.ok) {
+        // If already a member, automatically decline the invitation
+        if (data.error?.includes('already a member')) {
+          await handleDecline(invitationId)
+          setError('You are already a member of this organization. Invitation removed.')
+          return
+        }
         throw new Error(data.error || 'Failed to accept invitation')
       }
 
@@ -89,6 +95,18 @@ export default function InvitationsPage() {
     try {
       setProcessingId(invitationId)
       setError(null)
+
+      const response = await fetch('/api/invitations', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ invitationId }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to decline invitation')
+      }
 
       // Remove from local state
       setInvitations(invitations.filter((inv) => inv.id !== invitationId))

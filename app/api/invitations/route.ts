@@ -52,3 +52,49 @@ export async function GET(request: Request) {
     return Response.json({ error: error.message }, { status: 500 })
   }
 }
+
+// DELETE - Decline an invitation
+export async function DELETE(request: Request) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  try {
+    const { invitationId } = await request.json()
+
+    if (!invitationId) {
+      return Response.json({ error: 'Invitation ID is required' }, { status: 400 })
+    }
+
+    // Verify the invitation belongs to the user
+    const { data: invitation, error: fetchError } = await supabase
+      .from('invitations')
+      .select('*')
+      .eq('id', invitationId)
+      .ilike('email', user.email || '')
+      .single()
+
+    if (fetchError || !invitation) {
+      return Response.json({ error: 'Invitation not found' }, { status: 404 })
+    }
+
+    // Delete the invitation
+    const { error: deleteError } = await supabase
+      .from('invitations')
+      .delete()
+      .eq('id', invitationId)
+
+    if (deleteError) throw deleteError
+
+    return Response.json({ success: true })
+  } catch (error: any) {
+    console.error('Error declining invitation:', error)
+    return Response.json({ error: error.message }, { status: 500 })
+  }
+}
