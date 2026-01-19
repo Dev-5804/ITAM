@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { isAdminOrOwner } from '@/lib/rbac'
+import { isOrganizationMember } from '@/lib/rbac'
 
 export async function GET(
   request: Request,
@@ -16,9 +16,9 @@ export async function GET(
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Check if user is admin or owner
-  const hasPermission = await isAdminOrOwner(organizationId, user.id)
-  if (!hasPermission) {
+  // Check if user is a member of the organization
+  const isMember = await isOrganizationMember(organizationId, user.id)
+  if (!isMember) {
     return Response.json({ error: 'Forbidden' }, { status: 403 })
   }
 

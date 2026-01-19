@@ -39,6 +39,11 @@ export async function isOwner(organizationId: string, userId: string): Promise<b
   return role === 'OWNER'
 }
 
+export async function isOrganizationMember(organizationId: string, userId: string): Promise<boolean> {
+  const role = await getUserRole(organizationId, userId)
+  return role !== null
+}
+
 export async function getOrganizationSubscription(organizationId: string) {
   const supabase = await createClient()
 

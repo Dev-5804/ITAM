@@ -4,7 +4,9 @@ import { useEffect, useState } from 'react'
 import { useOrganization } from '@/lib/context/organization-context'
 import Link from 'next/link'
 import { RoleGuard } from '@/components/role-guard'
-import { Wrench, Users, FileText, Activity } from 'lucide-react'
+import { InviteUserDialog } from '@/components/invite-user-dialog'
+import { useIsAdminOrOwner } from '@/lib/hooks/use-role'
+import { Wrench, Users, FileText, Activity, UserPlus } from 'lucide-react'
 
 interface DashboardStats {
   totalTools: number
@@ -22,6 +24,7 @@ interface AuditLog {
 
 export default function DashboardPage() {
   const { currentOrganization } = useOrganization()
+  const isAdminOrOwner = useIsAdminOrOwner()
   const [stats, setStats] = useState<DashboardStats>({
     totalTools: 0,
     activeUsers: 0,
@@ -29,6 +32,7 @@ export default function DashboardPage() {
   })
   const [recentActivity, setRecentActivity] = useState<AuditLog[]>([])
   const [loading, setLoading] = useState(true)
+  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false)
 
   useEffect(() => {
     if (currentOrganization) {
@@ -50,7 +54,7 @@ export default function DashboardPage() {
       // Fetch members count
       const membersRes = await fetch(`/api/organizations/${currentOrganization.id}/members`)
       const membersData = await membersRes.json()
-      const activeUsers = membersData.members?.length || 0
+      const activeUsers = membersData.memberships?.length || 0
 
       // Fetch pending access requests count (you'll need to create this endpoint)
       // For now, we'll set it to 0
@@ -91,11 +95,22 @@ export default function DashboardPage() {
   return (
     <div className="p-8">
       {/* Page Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-black dark:text-white mb-2">Dashboard</h1>
-        <p className="text-sm text-neutral-600 dark:text-neutral-400">
-          Overview of your organization's access management
-        </p>
+      <div className="mb-8 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-black dark:text-white mb-2">Dashboard</h1>
+          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+            Overview of your organization's access management
+          </p>
+        </div>
+        {isAdminOrOwner && (
+          <button
+            onClick={() => setIsInviteDialogOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+          >
+            <UserPlus className="w-4 h-4" />
+            Invite User
+          </button>
+        )}
       </div>
 
       <div className="space-y-6">
@@ -204,6 +219,16 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Invite User Dialog */}
+      <InviteUserDialog
+        isOpen={isInviteDialogOpen}
+        onClose={() => setIsInviteDialogOpen(false)}
+        onSuccess={() => {
+          // Refresh stats to update active users count
+          fetchDashboardData()
+        }}
+      />
     </div>
   )
 }

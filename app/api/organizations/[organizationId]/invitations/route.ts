@@ -74,7 +74,7 @@ export async function POST(
       .from('invitations')
       .insert({
         organization_id: organizationId,
-        email,
+        email: email.toLowerCase(),
         role,
         invited_by: user.id,
         token,

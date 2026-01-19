@@ -14,7 +14,8 @@ import {
   LogOut,
   User,
   Shield,
-  Building2
+  Building2,
+  Mail
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -30,6 +31,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [userEmail, setUserEmail] = useState<string>('')
   const [orgDropdownOpen, setOrgDropdownOpen] = useState(false)
   const [userDropdownOpen, setUserDropdownOpen] = useState(false)
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0)
+  const [pendingInvitationsCount, setPendingInvitationsCount] = useState(0)
 
   useEffect(() => {
     const getUser = async () => {
@@ -41,22 +44,69 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     getUser()
   }, [])
 
+  useEffect(() => {
+    const fetchPendingRequests = async () => {
+      if (!currentOrganization) return
+
+      try {
+        const response = await fetch(`/api/organizations/${currentOrganization.id}/access-requests`)
+        const data = await response.json()
+        if (response.ok) {
+          const pending = data.requests?.filter((r: any) => r.status === 'PENDING').length || 0
+          setPendingRequestsCount(pending)
+        }
+      } catch (error) {
+        console.error('Error fetching pending requests:', error)
+      }
+    }
+
+    fetchPendingRequests()
+    
+    // Refresh pending count every 30 seconds
+    const interval = setInterval(fetchPendingRequests, 30000)
+    return () => clearInterval(interval)
+  }, [currentOrganization])
+
+  useEffect(() => {
+    const fetchPendingInvitations = async () => {
+      try {
+        const response = await fetch('/api/invitations')
+        const data = await response.json()
+        if (response.ok) {
+          setPendingInvitationsCount(data.invitations?.length || 0)
+        }
+      } catch (error) {
+        console.error('Error fetching pending invitations:', error)
+      }
+    }
+
+    fetchPendingInvitations()
+    
+    // Refresh pending count every 30 seconds
+    const interval = setInterval(fetchPendingInvitations, 30000)
+    return () => clearInterval(interval)
+  }, [])
+
   const handleSignOut = async () => {
     await supabase.auth.signOut()
     router.push('/login')
   }
 
   const navItems = [
-    { name: 'Dashboard', icon: LayoutDashboard, href: '/dashboard', roles: ['OWNER', 'ADMIN', 'MEMBER'] },
-    { name: 'Tools', icon: Wrench, href: '/tools', roles: ['OWNER', 'ADMIN'] },
-    { name: 'Access Requests', icon: FileText, href: '/access-requests', roles: ['OWNER', 'ADMIN', 'MEMBER'] },
-    { name: 'Audit Logs', icon: Activity, href: '/audit-logs', roles: ['OWNER', 'ADMIN'] },
-    { name: 'Settings', icon: Settings, href: '/settings', roles: ['OWNER', 'ADMIN', 'MEMBER'] },
+    { name: 'Dashboard', icon: LayoutDashboard, href: '/dashboard', roles: ['OWNER', 'ADMIN', 'MEMBER'], requiresOrg: true },
+    { name: 'My Invitations', icon: Mail, href: '/invitations', roles: ['OWNER', 'ADMIN', 'MEMBER'], badge: 'invitations', requiresOrg: false },
+    { name: 'Tools', icon: Wrench, href: '/tools', roles: ['OWNER', 'ADMIN'], requiresOrg: true },
+    { name: 'Access Requests', icon: FileText, href: '/access-requests', roles: ['OWNER', 'ADMIN', 'MEMBER'], badge: 'requests', requiresOrg: true },
+    { name: 'Audit Logs', icon: Activity, href: '/audit-logs', roles: ['OWNER', 'ADMIN'], requiresOrg: true },
+    { name: 'Settings', icon: Settings, href: '/settings', roles: ['OWNER', 'ADMIN', 'MEMBER'], requiresOrg: true },
   ]
 
-  const visibleNavItems = navItems.filter(item => 
-    userRole && item.roles.includes(userRole)
-  )
+  const visibleNavItems = navItems.filter(item => {
+    // Show "My Invitations" even without an organization
+    if (!item.requiresOrg) return true
+    // Other items require organization and role
+    return currentOrganization && userRole && item.roles.includes(userRole)
+  })
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
@@ -135,11 +185,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <nav className="flex-1 px-4 py-4 space-y-1">
           {visibleNavItems.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+            const showBadge = 
+              (item.badge === 'requests' && pendingRequestsCount > 0) ||
+              (item.badge === 'invitations' && pendingInvitationsCount > 0)
+            const badgeCount = item.badge === 'requests' ? pendingRequestsCount : pendingInvitationsCount
+            
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors relative ${
                   isActive
                     ? 'bg-black dark:bg-white text-white dark:text-black'
                     : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-900 hover:text-black dark:hover:text-white'
@@ -147,6 +202,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               >
                 <item.icon className="w-5 h-5" />
                 {item.name}
+                {showBadge && (
+                  <span className="ml-auto bg-amber-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5">
+                    {badgeCount}
+                  </span>
+                )}
               </Link>
             )
           })}

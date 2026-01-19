@@ -425,7 +425,9 @@ CREATE POLICY "Members can view audit logs in their organization"
   ON audit_logs FOR SELECT
   USING (is_organization_member(organization_id, auth.uid()));
 
--- Note: No INSERT policy - audit logs inserted via service role or backend
+CREATE POLICY "Members can create audit logs for their organization"
+  ON audit_logs FOR INSERT
+  WITH CHECK (is_organization_member(organization_id, auth.uid()));
 
 -- =====================================================
 -- RLS POLICIES - SUBSCRIPTIONS
