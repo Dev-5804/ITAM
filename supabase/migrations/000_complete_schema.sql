@@ -293,22 +293,20 @@ $$ LANGUAGE SQL STABLE SECURITY DEFINER;
 -- RLS POLICIES - ORGANIZATIONS
 -- =====================================================
 
-CREATE POLICY "Users can view their organizations"
+CREATE POLICY "Members can view their organizations"
   ON organizations FOR SELECT
-  USING (
-    is_organization_member(id, auth.uid()) OR
-    auth.uid() IS NOT NULL  -- Allow viewing during creation before membership exists
-  );
+  USING (is_organization_member(id, auth.uid()));
 
-CREATE POLICY "Authenticated users can create organizations"
+CREATE POLICY "Users can create organizations"
   ON organizations FOR INSERT
   WITH CHECK (auth.uid() IS NOT NULL);
 
-CREATE POLICY "Owners can update their organization"
+CREATE POLICY "Owners can update organizations"
   ON organizations FOR UPDATE
-  USING (is_owner(id, auth.uid()));
+  USING (is_owner(id, auth.uid()))
+  WITH CHECK (is_owner(id, auth.uid()));
 
-CREATE POLICY "Owners can delete their organization"
+CREATE POLICY "Owners can delete organizations"
   ON organizations FOR DELETE
   USING (is_owner(id, auth.uid()));
 

@@ -23,7 +23,15 @@ A multi-tenant SaaS application for managing and auditing access to internal too
 - Row-level security for complete tenant isolation
 - Subscription limits (Free: 5 users, 3 tools)
 
-### Phase 3 - Tool Registry (Coming Soon)
+### Phase 3 ✅ - Security Hardening
+- SECURITY DEFINER RPC functions for all sensitive operations
+- Defense-in-depth security architecture
+- Immutable audit logs
+- Subscription limit enforcement at database level
+- Prevention of privilege escalation and tenant leakage
+- See [SECURITY.md](./SECURITY.md) for details
+
+### Phase 4 - Tool Registry (In Progress)
 - Tool CRUD operations
 - Access level management
 - Admin/Owner enforcement
@@ -54,9 +62,12 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 ```
 
-4. Apply database migrations:
+4. Apply database migrations (in order):
    - Go to your Supabase Dashboard → SQL Editor
-   - Copy and run `supabase/migrations/000_complete_schema.sql`
+   - Run migrations in the following order:
+     1. `supabase/migrations/000_complete_schema.sql` - Core database schema
+     2. `supabase/migrations/001_secure_rpc_functions.sql` - Security functions
+     3. `supabase/migrations/002_lockdown_rls_policies.sql` - Final RLS policies
 
 5. Configure OAuth providers in Supabase:
    - Go to Authentication → Providers
@@ -92,7 +103,10 @@ itam/
 ├── components/
 │   └── role-guard.tsx            # Role-based rendering
 ├── supabase/
-│   └── migrations/               # Database migrations
+│   └── migrations/               # Database migrations (apply in order)
+│       ├── 000_complete_schema.sql      # Core schema
+│       ├── 001_secure_rpc_functions.sql # Security functions
+│       └── 002_lockdown_rls_policies.sql # Final RLS policies
 └── middleware.ts                 # Next.js auth middleware
 ```
 
@@ -169,6 +183,13 @@ const isAdmin = useIsAdminOrOwner()
 - [ ] Phase 4: Access Workflow
 - [ ] Phase 5: Audit System
 - [ ] Phase 6: Subscription Enforcement
+
+## Documentation
+
+- **[DATABASE-GUIDE.md](DATABASE-GUIDE.md)** - Complete guide to Supabase setup, migrations, and database operations
+- **[supabase/README.md](supabase/README.md)** - Detailed migration documentation with troubleshooting
+- **[SECURITY.md](SECURITY.md)** - Security architecture and best practices
+- **[prd.md](prd.md)** - Product requirements and specifications
 
 ## License
 

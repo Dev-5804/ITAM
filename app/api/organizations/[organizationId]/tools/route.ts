@@ -73,54 +73,30 @@ export async function POST(
       return Response.json({ error: 'Tool name is required' }, { status: 400 })
     }
 
-    // Check subscription limits
-    const limits = await checkSubscriptionLimits(organizationId)
-    if (!limits.canAddTool) {
-      return Response.json(
-        {
-          error: `Tool limit reached (${limits.limits.tools}). Upgrade to add more tools.`,
-        },
-        { status: 400 }
-      )
+    // Create tool via secure RPC (includes limit checks)
+    const { data: toolId, error: toolError } = await supabase
+      .rpc('create_tool', {
+        org_id: organizationId,
+        tool_name: name,
+        tool_description: description || null,
+        tool_category: category || null
+      })
+
+    if (toolError) {
+      if (toolError.message.includes('limit reached')) {
+        return Response.json({ error: toolError.message }, { status: 400 })
+      }
+      throw toolError
     }
 
-    // Create tool
-    const { data: tool, error: toolError } = await supabase
+    // Fetch the created tool
+    const { data: tool, error: fetchError } = await supabase
       .from('tools')
-      .insert({
-        organization_id: organizationId,
-        name,
-        description: description || null,
-        category: category || null,
-        status: 'ACTIVE',
-      })
-      .select()
+      .select('*')
+      .eq('id', toolId)
       .single()
 
-    if (toolError) throw toolError
-
-    // Create default access levels
-    const accessLevels = [
-      { tool_id: tool.id, level: 'READ', description: 'Read-only access' },
-      { tool_id: tool.id, level: 'WRITE', description: 'Read and write access' },
-      { tool_id: tool.id, level: 'ADMIN', description: 'Full administrative access' },
-    ]
-
-    const { error: levelsError } = await supabase
-      .from('tool_access_levels')
-      .insert(accessLevels)
-
-    if (levelsError) throw levelsError
-
-    // Create audit log
-    await createAuditLog({
-      organizationId,
-      actorId: user.id,
-      action: 'TOOL_CREATED',
-      resourceType: 'tool',
-      resourceId: tool.id,
-      metadata: { name, category },
-    })
+    if (fetchError) throw fetchError
 
     return Response.json({ tool })
   } catch (error: any) {

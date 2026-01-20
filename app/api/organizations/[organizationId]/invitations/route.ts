@@ -32,17 +32,6 @@ export async function POST(
       return Response.json({ error: 'Email is required' }, { status: 400 })
     }
 
-    // Check subscription limits
-    const limits = await checkSubscriptionLimits(organizationId)
-    if (!limits.canAddMember) {
-      return Response.json(
-        {
-          error: `Member limit reached (${limits.limits.users}). Upgrade to add more members.`,
-        },
-        { status: 400 }
-      )
-    }
-
     // Check if invitee already has a user account and membership
     const { data: inviteeUser } = await supabase
       .from('profiles')
@@ -66,39 +55,35 @@ export async function POST(
 
     // Generate invitation token
     const token = crypto.randomBytes(32).toString('hex')
-    const expiresAt = new Date()
-    expiresAt.setDate(expiresAt.getDate() + 7) // 7 days expiry
 
-    // Create invitation
-    const { data: invitation, error: inviteError } = await supabase
-      .from('invitations')
-      .insert({
-        organization_id: organizationId,
-        email: email.toLowerCase(),
-        role,
-        invited_by: user.id,
-        token,
-        expires_at: expiresAt.toISOString(),
+    // Create invitation via secure RPC (includes limit checks)
+    const { data: invitationId, error: inviteError } = await supabase
+      .rpc('create_invitation', {
+        org_id: organizationId,
+        invitee_email: email.toLowerCase(),
+        invitee_role: role,
+        invitation_token: token,
+        expires_days: 7
       })
-      .select()
-      .single()
 
     if (inviteError) {
-      if (inviteError.code === '23505') {
+      if (inviteError.message.includes('limit reached')) {
+        return Response.json({ error: inviteError.message }, { status: 400 })
+      }
+      if (inviteError.code === '23505' || inviteError.message.includes('duplicate')) {
         return Response.json({ error: 'Invitation already sent to this email' }, { status: 400 })
       }
       throw inviteError
     }
 
-    // Create audit log
-    await createAuditLog({
-      organizationId,
-      actorId: user.id,
-      action: 'INVITATION_CREATED',
-      resourceType: 'invitation',
-      resourceId: invitation.id,
-      metadata: { email, role },
-    })
+    // Fetch the created invitation
+    const { data: invitation, error: fetchError } = await supabase
+      .from('invitations')
+      .select('*')
+      .eq('id', invitationId)
+      .single()
+
+    if (fetchError) throw fetchError
 
     return Response.json({ invitation })
   } catch (error: any) {

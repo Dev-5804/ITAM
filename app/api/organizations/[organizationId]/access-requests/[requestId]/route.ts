@@ -28,36 +28,32 @@ export async function PATCH(
     const body = await request.json()
     const { status } = body
 
-    if (!status || !['APPROVED', 'REJECTED'].includes(status)) {
+    if (!status || !['APPROVED', 'REJECTED', 'REVOKED'].includes(status)) {
       return Response.json(
-        { error: 'Status must be APPROVED or REJECTED' },
+        { error: 'Status must be APPROVED, REJECTED, or REVOKED' },
         { status: 400 }
       )
     }
 
-    const { data: accessRequest, error } = await supabase
-      .from('access_requests')
-      .update({
-        status,
-        reviewed_by: user.id,
-        reviewed_at: new Date().toISOString(),
+    // Review access request via secure RPC
+    const { error: reviewError } = await supabase
+      .rpc('review_access_request', {
+        request_id: requestId,
+        new_status: status
       })
+
+    if (reviewError) {
+      throw reviewError
+    }
+
+    // Fetch the updated request
+    const { data: accessRequest, error: fetchError } = await supabase
+      .from('access_requests')
+      .select('*')
       .eq('id', requestId)
-      .eq('organization_id', organizationId)
-      .select()
       .single()
 
-    if (error) throw error
-
-    // Create audit log
-    await createAuditLog({
-      organizationId,
-      actorId: user.id,
-      action: `ACCESS_REQUEST_${status}`,
-      resourceType: 'access_request',
-      resourceId: accessRequest.id,
-      metadata: { status },
-    })
+    if (fetchError) throw fetchError
 
     return Response.json({ request: accessRequest })
   } catch (error: any) {

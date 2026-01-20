@@ -149,6 +149,14 @@ export default function DashboardPage() {
             ) : (
               <p className="text-3xl font-bold text-black dark:text-white">{stats.activeUsers}</p>
             )}
+            <RoleGuard allowedRoles={['OWNER', 'ADMIN']}>
+              <Link 
+                href={`/organizations/${currentOrganization.id}/members`}
+                className="text-xs text-purple-600 dark:text-purple-400 hover:underline mt-2 inline-block"
+              >
+                View all →
+              </Link>
+            </RoleGuard>
           </div>
 
           {/* Pending Requests */}
