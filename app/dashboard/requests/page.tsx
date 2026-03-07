@@ -103,7 +103,7 @@ export default function RequestsPage() {
                 ) : (
                     requests.map(req => {
                         const toolName = req.tools?.name || "Unknown Tool";
-                        const requesterName = req.users?.full_name || "User";
+                        const requesterName = req.requester?.full_name || "User";
                         const isOwnRequest = req.requester_id === currentUserId;
 
                         return (

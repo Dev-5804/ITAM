@@ -30,8 +30,8 @@ export async function GET(request: Request) {
             .select(`
         *,
         tools (name),
-        users!requester_id (full_name, avatar_url),
-        users!reviewer_id (full_name)
+        requester:users!requester_id (full_name, avatar_url),
+        reviewer:users!reviewer_id (full_name)
       `)
             .order('created_at', { ascending: false });
 
