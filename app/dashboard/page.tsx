@@ -12,12 +12,15 @@ export default async function DashboardPage() {
     // Check if user has an organization
     const { data: userData } = await supabase
         .from('users')
-        .select('tenant_id, tenants(id)')
+        .select('tenant_id')
         .eq('id', user.id)
         .single()
 
-    // If user has tenant_id AND the tenant exists, redirect to plan page
-    if (userData?.tenant_id && userData.tenants) {
+    // If user has tenant_id, redirect to plan page
+    // Note: don't join tenants here — the RLS tenant_select policy relies on
+    // my_tenant_id() from the JWT, which may be stale right after org creation.
+    // Reading tenant_id directly from the users row is always accurate.
+    if (userData?.tenant_id) {
         redirect('/dashboard/plan')
     }
 

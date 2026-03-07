@@ -33,7 +33,10 @@ export default function PlanPage() {
         setLoading(true);
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        if (!user) {
+            setLoading(false);
+            return;
+        }
 
         const { data: userData } = await supabase
             .from('users')
