@@ -33,7 +33,11 @@ export default async function DashboardPage() {
     }
 
     if (tenantId) {
-        redirect('/dashboard/plan')
+        const role = userData?.role || 'member'
+        if (role === 'owner') {
+            redirect('/dashboard/plan')
+        }
+        redirect('/dashboard/requests')
     }
 
     // Otherwise show the welcome/onboarding page
