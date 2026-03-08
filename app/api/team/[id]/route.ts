@@ -48,6 +48,11 @@ export async function DELETE(
 
         if (deleteError) throw deleteError;
 
+        // Clear app_metadata so the dashboard recovery logic cannot re-add this user
+        await supabaseAdmin.auth.admin.updateUserById(targetUserId, {
+            app_metadata: { tenant_id: null, role: null },
+        });
+
         await supabaseAdmin.from('audit_logs').insert({
             tenant_id: currentUserData.tenant_id,
             actor_id: user.id,

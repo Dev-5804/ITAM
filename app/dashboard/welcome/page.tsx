@@ -20,7 +20,7 @@ export default function WelcomePage() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-zinc-50 via-white to-zinc-50 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950 p-4">
+        <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-zinc-50 via-white to-zinc-50 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950 p-4">
             <div className="w-full max-w-4xl space-y-6">
                 {/* Logout Button */}
                 <div className="flex justify-end">

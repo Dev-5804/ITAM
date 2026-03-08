@@ -21,17 +21,17 @@ export default function LandingPage() {
         </nav>
       </header>
       <main className="flex-1">
-        <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-gradient-to-b from-white to-zinc-50 dark:from-zinc-950 dark:to-zinc-900 border-b border-zinc-200 dark:border-zinc-800 relative overflow-hidden">
+        <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-linear-to-b from-white to-zinc-50 dark:from-zinc-950 dark:to-zinc-900 border-b border-zinc-200 dark:border-zinc-800 relative overflow-hidden">
           {/* Decorative background blur */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-indigo-500/10 rounded-full blur-[100px] opacity-50 dark:opacity-20 pointer-events-none" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-200 h-200 bg-indigo-500/10 rounded-full blur-[100px] opacity-50 dark:opacity-20 pointer-events-none" />
 
           <div className="container px-4 md:px-6 mx-auto relative z-10">
             <div className="flex flex-col items-center space-y-8 text-center animate-in fade-in slide-in-from-bottom-8 duration-700 ease-out">
               <div className="space-y-4 max-w-3xl">
-                <h1 className="text-4xl font-extrabold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl/none bg-clip-text text-transparent bg-gradient-to-r from-zinc-900 to-zinc-500 dark:from-zinc-100 dark:to-zinc-500">
+                <h1 className="text-4xl font-extrabold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl/none bg-clip-text text-transparent bg-linear-to-r from-zinc-900 to-zinc-500 dark:from-zinc-100 dark:to-zinc-500">
                   Internal Tool Access Manager
                 </h1>
-                <p className="mx-auto max-w-[700px] text-zinc-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-zinc-400">
+                <p className="mx-auto max-w-175 text-zinc-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-zinc-400">
                   Manage which internal tools your team can access. Secure, fast, and fully auditable access requests for your modern organization.
                 </p>
               </div>
@@ -77,7 +77,7 @@ export default function LandingPage() {
               {/* Pro Plan */}
               <div className="flex flex-col p-8 rounded-3xl bg-indigo-600 text-white shadow-2xl shadow-indigo-600/20 scale-105 border border-indigo-500 relative">
                 <div className="absolute top-0 right-8 transform -translate-y-1/2">
-                  <span className="bg-gradient-to-r from-pink-500 to-violet-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Most Popular</span>
+                  <span className="bg-linear-to-r from-pink-500 to-violet-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Most Popular</span>
                 </div>
                 <h3 className="text-2xl font-bold">Pro</h3>
                 <div className="mt-4 flex items-baseline text-5xl font-extrabold tracking-tight">

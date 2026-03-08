@@ -93,7 +93,7 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
             <div className="absolute top-1/4 left-1/4 -z-10 h-96 w-96 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
             <div className="absolute bottom-1/4 right-1/4 -z-10 h-72 w-72 rounded-full bg-purple-500/10 blur-3xl pointer-events-none" />
 
-            <div className="z-10 w-full max-w-[440px] animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="z-10 w-full max-w-110 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <Card className="border-zinc-200/60 dark:border-zinc-800/60 shadow-xl backdrop-blur-sm bg-white/80 dark:bg-zinc-950/80">
                     <CardHeader className="text-center pb-2">
                         <div className="mx-auto bg-indigo-500/10 p-3 rounded-full w-12 h-12 flex items-center justify-center mb-4 text-indigo-600">
@@ -120,7 +120,7 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
                                     <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-2">
                                         <span className="font-medium text-zinc-900 dark:text-zinc-100">{invite.inviterName}</span> invited you to join
                                     </p>
-                                    <p className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400 mb-3">{invite.tenantName}</p>
+                                    <p className="text-2xl font-bold bg-clip-text text-transparent bg-linear-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400 mb-3">{invite.tenantName}</p>
                                     <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-300 uppercase tracking-wide">
                                         {invite.role}
                                     </div>

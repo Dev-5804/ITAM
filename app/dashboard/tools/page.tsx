@@ -203,7 +203,7 @@ export default function ToolsPage() {
                                         )}
                                     </div>
                                     <CardTitle className="mt-4 text-xl">{tool.name}</CardTitle>
-                                    <CardDescription className="line-clamp-2 min-h-[40px] text-zinc-500">
+                                    <CardDescription className="line-clamp-2 min-h-10 text-zinc-500">
                                         {tool.description || 'No description provided for this tool.'}
                                     </CardDescription>
                                 </CardHeader>

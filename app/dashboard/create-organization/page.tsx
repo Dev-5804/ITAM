@@ -50,7 +50,7 @@ export default function CreateOrganizationPage() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-zinc-50 via-white to-zinc-50 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950 p-4">
+        <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-zinc-50 via-white to-zinc-50 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950 p-4">
             <Card className="w-full max-w-md border-zinc-200/60 dark:border-zinc-800/60 shadow-xl shadow-zinc-900/5 backdrop-blur-sm bg-white/80 dark:bg-zinc-950/80">
                 <CardHeader className="space-y-2">
                     <Button

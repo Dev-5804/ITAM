@@ -15,6 +15,7 @@ export default function TeamPage() {
     const [loading, setLoading] = useState(true);
     const [role, setRole] = useState("member");
     const [error, setError] = useState<string | null>(null);
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
     const [inviteEmail, setInviteEmail] = useState("");
     const [inviteRole, setInviteRole] = useState("member");
@@ -31,6 +32,7 @@ export default function TeamPage() {
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
+        setCurrentUserId(user.id);
 
         try {
             const res = await fetch('/api/team');
@@ -229,7 +231,7 @@ export default function TeamPage() {
                                                 <td className="px-6 py-4 text-right">
                                                     <div className="flex items-center justify-end gap-2">
                                                         <select
-                                                            className="text-xs bg-transparent border border-zinc-200 dark:border-zinc-800 rounded p-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                                                            className="text-xs bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded p-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-600"
                                                             value={member.role}
                                                             onChange={(e) => changeRole(member.id, e.target.value)}
                                                         >
@@ -237,9 +239,11 @@ export default function TeamPage() {
                                                             <option value="admin">Admin</option>
                                                             <option value="member">Member</option>
                                                         </select>
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30" onClick={() => setConfirmRemove({ id: member.id, name: member.name || member.email })}>
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
+                                                        <span className={member.id === currentUserId ? 'cursor-not-allowed' : ''}>
+                                                            <Button variant="ghost" size="icon" className={`h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 ${member.id === currentUserId ? 'opacity-40 pointer-events-none' : ''}`} onClick={() => setConfirmRemove({ id: member.id, name: member.name || member.email })} disabled={member.id === currentUserId}>
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </span>
                                                     </div>
                                                 </td>
                                             )}

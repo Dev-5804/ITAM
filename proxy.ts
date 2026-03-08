@@ -2,8 +2,13 @@ import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
 export async function proxy(request: NextRequest) {
+    // Inject x-pathname into the forwarded request headers so server components
+    // can read it via headers(). Response headers are NOT visible to server components.
+    const requestHeaders = new Headers(request.headers)
+    requestHeaders.set('x-pathname', request.nextUrl.pathname)
+
     let supabaseResponse = NextResponse.next({
-        request,
+        request: { headers: requestHeaders },
     })
 
     const supabase = createServerClient(
@@ -15,9 +20,9 @@ export async function proxy(request: NextRequest) {
                     return request.cookies.getAll()
                 },
                 setAll(cookiesToSet) {
-                    cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+                    cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
                     supabaseResponse = NextResponse.next({
-                        request,
+                        request: { headers: requestHeaders },
                     })
                     cookiesToSet.forEach(({ name, value, options }) =>
                         supabaseResponse.cookies.set(name, value, options)

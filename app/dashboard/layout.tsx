@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Header } from '@/components/layout/Header'
@@ -33,10 +34,16 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         userData = { tenant_id: tenantId, role, full_name: fullName }
     }
 
-    // If user doesn't have an organization, don't render the dashboard UI
-    // The create-organization page will handle this case
+    // If user doesn't have an organization, redirect to welcome (unless already there)
     if (!userData?.tenant_id) {
-        return <>{children}</>
+        const headersList = await headers()
+        const pathname = headersList.get('x-pathname') || ''
+        const isTenantlessPage = pathname.startsWith('/dashboard/welcome') ||
+            pathname.startsWith('/dashboard/create-organization')
+        if (isTenantlessPage) {
+            return <>{children}</>
+        }
+        redirect('/dashboard/welcome')
     }
 
     let tenantName = 'Your Organization'
