@@ -27,7 +27,7 @@ export function Sidebar({ role, tenantName, userName }: SidebarProps) {
         { name: "Tools", href: "/dashboard/tools", icon: Wrench, roles: ["owner", "admin", "member"] },
         { name: "Team", href: "/dashboard/team", icon: Users, roles: ["owner", "admin"] },
         { name: "Audit Log", href: "/dashboard/audit", icon: Activity, roles: ["owner", "admin"] },
-        { name: "Settings", href: "/dashboard/settings", icon: Settings, roles: ["owner"] },
+        { name: "Settings", href: "/dashboard/settings", icon: Settings, roles: ["owner", "admin", "member"] },
         { name: "Plan", href: "/dashboard/plan", icon: CreditCard, roles: ["owner"] },
     ];
 
