@@ -88,7 +88,7 @@ export async function PATCH(request: Request) {
 
         const newPlan = result.data.plan;
         let maxMembers = 5;
-        let maxTools = 2;
+        let maxTools = 3;
 
         if (newPlan === 'pro') {
             maxMembers = 20;

@@ -111,7 +111,7 @@ export default function PlanPage() {
             id: 'free',
             name: 'Free',
             icon: <CheckCircle className="h-5 w-5 text-zinc-500" />,
-            limits: '5 members, 2 tools',
+            limits: '5 members, 3 tools',
             price: '$0/mo',
             color: 'bg-zinc-100 hover:bg-zinc-200 text-zinc-900 border-zinc-200'
         },

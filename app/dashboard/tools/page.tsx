@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Wrench, Edit, Power, PowerOff, Loader2, X } from "lucide-react";
+import { Plus, Wrench, Edit, Power, PowerOff, Loader2, X, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
@@ -239,13 +239,19 @@ export default function ToolsPage() {
                             <Button 
                                 variant="ghost" 
                                 size="icon" 
-                                onClick={() => setShowDialog(false)}
+                                onClick={() => { setShowDialog(false); setError(null); }}
                                 className="h-8 w-8"
                             >
                                 <X className="h-4 w-4" />
                             </Button>
                         </div>
                         <form onSubmit={createTool} className="p-6 space-y-4">
+                            {error && (
+                                <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-sm rounded-lg px-4 py-3 flex items-start gap-2">
+                                    <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                                    <span>{error}</span>
+                                </div>
+                            )}
                             <div className="space-y-2">
                                 <Label htmlFor="name">Tool Name *</Label>
                                 <Input
@@ -280,7 +286,7 @@ export default function ToolsPage() {
                                     type="button"
                                     variant="outline"
                                     className="flex-1"
-                                    onClick={() => setShowDialog(false)}
+                                    onClick={() => { setShowDialog(false); setError(null); }}
                                     disabled={creating}
                                 >
                                     Cancel

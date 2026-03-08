@@ -66,7 +66,7 @@ export default function LandingPage() {
                 </div>
                 <ul className="mt-8 space-y-4 flex-1">
                   <li className="flex items-center gap-3"><div className="rounded-full bg-indigo-100 dark:bg-indigo-900/50 p-1"><span className="text-indigo-600 dark:text-indigo-400 w-4 h-4 flex items-center justify-center font-bold text-xs">✓</span></div> Up to 5 members</li>
-                  <li className="flex items-center gap-3"><div className="rounded-full bg-indigo-100 dark:bg-indigo-900/50 p-1"><span className="text-indigo-600 dark:text-indigo-400 w-4 h-4 flex items-center justify-center font-bold text-xs">✓</span></div> Up to 10 tools</li>
+                  <li className="flex items-center gap-3"><div className="rounded-full bg-indigo-100 dark:bg-indigo-900/50 p-1"><span className="text-indigo-600 dark:text-indigo-400 w-4 h-4 flex items-center justify-center font-bold text-xs">✓</span></div> Up to 3 tools</li>
                   <li className="flex items-center gap-3"><div className="rounded-full bg-indigo-100 dark:bg-indigo-900/50 p-1"><span className="text-indigo-600 dark:text-indigo-400 w-4 h-4 flex items-center justify-center font-bold text-xs">✓</span></div> Audit log (7 days)</li>
                 </ul>
                 <Link href="/signup" className="mt-8">
