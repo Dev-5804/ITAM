@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { ReactNode } from 'react'
 
 export default async function CreateOrganizationLayout({ children }: { children: ReactNode }) {
@@ -10,8 +10,10 @@ export default async function CreateOrganizationLayout({ children }: { children:
         redirect('/login')
     }
 
-    // Check if user already has an organization
-    const { data: userData } = await supabase
+    // Use admin client to bypass RLS (my_tenant_id() in RLS requires JWT claim
+    // which may not be set if the custom claims hook isn't configured)
+    const supabaseAdmin = await createAdminClient()
+    const { data: userData } = await supabaseAdmin
         .from('users')
         .select('tenant_id')
         .eq('id', user.id)

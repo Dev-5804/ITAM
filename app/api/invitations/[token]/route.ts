@@ -33,11 +33,16 @@ export async function GET(
             return NextResponse.json({ error: 'Invitation has expired' }, { status: 400 });
         }
 
+        // Check if an auth user with this email already exists
+        const { data: authUsers } = await supabaseAdmin.auth.admin.listUsers();
+        const userExists = authUsers?.users.some(u => u.email === invite.email) ?? false;
+
         return NextResponse.json({
             email: invite.email,
             role: invite.role,
             tenantName: (invite.tenants as any).name,
-            inviterName: (invite.users as any)?.full_name || 'A team member'
+            inviterName: (invite.users as any)?.full_name || 'A team member',
+            userExists,
         });
     } catch (err) {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -79,7 +84,9 @@ export async function DELETE(
         const { error: deleteError } = await supabaseAdmin
             .from('invitations')
             .delete()
-            .match({ id, tenant_id: userData.tenant_id, accepted_at: null });
+            .eq('id', id)
+            .eq('tenant_id', userData.tenant_id)
+            .is('accepted_at', null);
 
         if (deleteError) {
             return NextResponse.json({ error: 'Failed to delete invitation' }, { status: 500 });

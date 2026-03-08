@@ -20,8 +20,9 @@ export async function sendInvitationEmail({
     const inviteLink = `${appUrl}/invite/${token}`;
 
     try {
+        const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
         const data = await resend.emails.send({
-            from: 'ITAM <noreply@itam.example.com>', // Replace with your verified domain
+            from: `ITAM <${fromEmail}>`,
             to: [email],
             subject: `You have been invited to join ${tenantName} on ITAM`,
             html: `
@@ -90,9 +91,10 @@ export async function sendRequestNotificationEmail({
 
     if (emails.length === 0) return { success: true };
 
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
     try {
         const data = await resend.emails.send({
-            from: 'ITAM <noreply@itam.example.com>',
+            from: `ITAM <${fromEmail}>`,
             to: emails,
             subject,
             html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">${htmlContent}</div>`,

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 export default function TeamPage() {
     const [members, setMembers] = useState<any[]>([]);
@@ -18,6 +19,8 @@ export default function TeamPage() {
     const [inviteEmail, setInviteEmail] = useState("");
     const [inviteRole, setInviteRole] = useState("member");
     const [inviting, setInviting] = useState(false);
+    const [confirmRemove, setConfirmRemove] = useState<{ id: string; name: string } | null>(null);
+    const [removing, setRemoving] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -29,25 +32,19 @@ export default function TeamPage() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        const { data: userData } = await supabase
-            .from('users')
-            .select('role')
-            .eq('id', user.id)
-            .single();
-
-        if (userData) setRole(userData.role);
-
-        if (userData?.role === 'admin' || userData?.role === 'owner') {
-            try {
-                const res = await fetch('/api/team');
-                if (res.ok) {
-                    const data = await res.json();
-                    setMembers(data.members || []);
-                    setInvitations(data.invitations || []);
-                }
-            } catch (e) {
-                console.error(e);
+        try {
+            const res = await fetch('/api/team');
+            if (res.ok) {
+                const data = await res.json();
+                setRole(data.currentUserRole || 'member');
+                setMembers(data.members || []);
+                setInvitations(data.invitations || []);
+            } else if (res.status === 403) {
+                // Member role — no access to team management
+                setRole('member');
             }
+        } catch (e) {
+            console.error(e);
         }
 
         setLoading(false);
@@ -94,24 +91,29 @@ export default function TeamPage() {
         }
     }
 
-    async function removeMember(id: string) {
-        if (!confirm("Are you sure you want to remove this member?")) return;
+    async function doRemoveMember() {
+        if (!confirmRemove) return;
+        setRemoving(true);
         try {
-            const res = await fetch(`/api/team/${id}`, { method: "DELETE" });
+            const res = await fetch(`/api/team/${confirmRemove.id}`, { method: "DELETE" });
             if (!res.ok) {
                 const data = await res.json();
                 throw new Error(data.error);
             }
+            setConfirmRemove(null);
             loadData();
         } catch (err: any) {
             setError(err.message);
+        } finally {
+            setRemoving(false);
         }
     }
 
     async function cancelInvite(id: string) {
         try {
             const res = await fetch(`/api/invitations/${id}`, { method: "DELETE" });
-            if (!res.ok) throw new Error("Failed to delete invitation");
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Failed to delete invitation");
             loadData();
         } catch (err: any) {
             setError(err.message);
@@ -171,7 +173,6 @@ export default function TeamPage() {
                         >
                             <option value="member">Member</option>
                             <option value="admin">Admin</option>
-                            <option value="owner">Owner</option>
                         </select>
                     </div>
                     <Button type="submit" disabled={inviting} className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium shadow-md shadow-indigo-600/20">
@@ -236,7 +237,7 @@ export default function TeamPage() {
                                                             <option value="admin">Admin</option>
                                                             <option value="member">Member</option>
                                                         </select>
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30" onClick={() => removeMember(member.id)}>
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30" onClick={() => setConfirmRemove({ id: member.id, name: member.name || member.email })}>
                                                             <Trash2 className="h-4 w-4" />
                                                         </Button>
                                                     </div>
@@ -285,6 +286,27 @@ export default function TeamPage() {
                     </div>
                 </div>
             )}
+
+            {/* Remove Member Confirmation Dialog */}
+            <Dialog open={!!confirmRemove} onOpenChange={(open) => { if (!open) setConfirmRemove(null); }}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Remove Member</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to remove <span className="font-medium text-zinc-900 dark:text-zinc-100">{confirmRemove?.name}</span> from the organization? This action cannot be undone.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button variant="outline" onClick={() => setConfirmRemove(null)} disabled={removing}>
+                            Cancel
+                        </Button>
+                        <Button variant="destructive" onClick={doRemoveMember} disabled={removing} className="bg-red-600 hover:bg-red-700 text-white">
+                            {removing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                            Remove Member
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

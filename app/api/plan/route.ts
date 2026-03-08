@@ -120,15 +120,21 @@ export async function PATCH(request: Request) {
             return NextResponse.json({ error: 'Forbidden. Only owners can change plans.' }, { status: 403 });
         }
 
-        const { error: rpcError } = await supabaseAdmin.rpc('change_plan_with_audit', {
-            p_tenant_id: userData.tenant_id,
-            p_new_plan: newPlan,
-            p_max_members: maxMembers,
-            p_max_tools: maxTools,
-            p_actor_id: user.id
-        });
+        const { error: updateError } = await supabaseAdmin
+            .from('tenants')
+            .update({ plan: newPlan, max_members: maxMembers, max_tools: maxTools })
+            .eq('id', userData.tenant_id);
 
-        if (rpcError) throw rpcError;
+        if (updateError) throw updateError;
+
+        await supabaseAdmin.from('audit_logs').insert({
+            tenant_id: userData.tenant_id,
+            actor_id: user.id,
+            action: 'plan.changed',
+            entity_type: 'tenant',
+            entity_id: userData.tenant_id,
+            metadata: { new_plan: newPlan, max_members: maxMembers, max_tools: maxTools },
+        });
 
         return NextResponse.json({ success: true, message: `Plan upgraded to ${newPlan.toUpperCase()}` });
     } catch (err: any) {

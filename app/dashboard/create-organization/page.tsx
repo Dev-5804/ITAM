@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { createClient } from "@/lib/supabase/client";
 
 export default function CreateOrganizationPage() {
     const router = useRouter();
@@ -34,6 +35,10 @@ export default function CreateOrganizationPage() {
             if (!response.ok) {
                 throw new Error(data.error || "Failed to create organization");
             }
+
+            // Refresh the Supabase session to get updated JWT with tenant_id
+            const supabase = createClient();
+            await supabase.auth.refreshSession();
 
             // Redirect to dashboard after creating organization
             router.push("/dashboard");

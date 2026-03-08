@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Header } from '@/components/layout/Header'
 import { ReactNode } from 'react'
@@ -12,11 +12,26 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         redirect('/login')
     }
 
-    const { data: userData } = await supabase
+    // Use admin client to bypass RLS (my_tenant_id() in RLS requires JWT claim
+    // which may not be set if the custom claims hook isn't configured)
+    const supabaseAdmin = await createAdminClient()
+    let { data: userData } = await supabaseAdmin
         .from('users')
         .select('role, full_name, tenant_id')
         .eq('id', user.id)
         .single()
+
+    // Recovery: if public.users row is missing/stale but app_metadata has tenant_id
+    if (!userData?.tenant_id && user.app_metadata?.tenant_id) {
+        const tenantId = user.app_metadata.tenant_id as string
+        const role = (user.app_metadata?.role as string) || 'member'
+        const fullName = (user.user_metadata?.full_name as string) || null
+        await supabaseAdmin.from('users').upsert(
+            { id: user.id, tenant_id: tenantId, role, full_name: fullName },
+            { onConflict: 'id' }
+        )
+        userData = { tenant_id: tenantId, role, full_name: fullName }
+    }
 
     // If user doesn't have an organization, don't render the dashboard UI
     // The create-organization page will handle this case
@@ -25,7 +40,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     }
 
     let tenantName = 'Your Organization'
-    const { data: tenantData } = await supabase
+    const { data: tenantData } = await supabaseAdmin
         .from('tenants')
         .select('name')
         .eq('id', userData.tenant_id)

@@ -52,7 +52,11 @@ export async function GET(request: Request) {
             email: authUsers?.users.find(u => u.id === m.id)?.email || 'Unknown'
         }));
 
-        return NextResponse.json({ members: membersWithEmail, invitations: invitations || [] });
+        return NextResponse.json({
+            members: membersWithEmail,
+            invitations: invitations || [],
+            currentUserRole: userData.role
+        });
     } catch (err) {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }

@@ -8,12 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { createClient } from "@/lib/supabase/client";
 
 interface InviteData {
     email: string;
     role: string;
     tenantName: string;
     inviterName: string;
+    userExists: boolean;
 }
 
 export default function InvitePage({ params }: { params: Promise<{ token: string }> }) {
@@ -48,14 +50,17 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
         setError(null);
 
         const formData = new FormData(e.currentTarget);
-        const fullName = formData.get("fullName") as string;
+        const fullName = formData.get("fullName") as string | null;
         const password = formData.get("password") as string;
 
         try {
+            const body: any = { password };
+            if (fullName) body.fullName = fullName;
+
             const response = await fetch(`/api/invitations/${token}/accept`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ fullName, password }),
+                body: JSON.stringify(body),
             });
 
             const data = await response.json();
@@ -64,8 +69,19 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
                 throw new Error(data.error || "Failed to join team");
             }
 
-            router.push(data.redirect || "/dashboard");
-            router.refresh();
+            // Sign in client-side so session cookies are properly set in the browser
+            const supabase = createClient();
+            const { error: signInError } = await supabase.auth.signInWithPassword({
+                email: data.email,
+                password,
+            });
+
+            if (signInError) {
+                throw new Error('Account set up successfully! Please sign in at /login to continue.');
+            }
+
+            // Hard redirect so server components re-render with the new session
+            window.location.href = "/dashboard";
         } catch (err: any) {
             setError(err.message);
             setSubmitting(false);
@@ -115,12 +131,19 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
                                         <Label htmlFor="email">Email address</Label>
                                         <Input id="email" value={invite.email} disabled className="bg-zinc-50 dark:bg-zinc-900 text-zinc-500 blur-none opacity-80" />
                                     </div>
+                                    {!invite.userExists && (
+                                        <div className="space-y-2">
+                                            <Label htmlFor="fullName">Your Full Name</Label>
+                                            <Input id="fullName" name="fullName" placeholder="Jane Doe" required={!invite.userExists} disabled={submitting} />
+                                        </div>
+                                    )}
                                     <div className="space-y-2">
-                                        <Label htmlFor="fullName">Your Full Name</Label>
-                                        <Input id="fullName" name="fullName" placeholder="Jane Doe" required disabled={submitting} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="password">Set a Password</Label>
+                                        <Label htmlFor="password">
+                                            {invite.userExists ? 'Your ITAM Password' : 'Set a Password'}
+                                        </Label>
+                                        {invite.userExists && (
+                                            <p className="text-xs text-zinc-500">You already have an ITAM account. Enter your existing password to join this organization.</p>
+                                        )}
                                         <Input id="password" name="password" type="password" placeholder="••••••••" required minLength={8} disabled={submitting} />
                                     </div>
                                     <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-6 mt-4 shadow-lg shadow-indigo-600/20 transition-all hover:-translate-y-0.5" type="submit" disabled={submitting}>

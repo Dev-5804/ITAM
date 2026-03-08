@@ -66,14 +66,23 @@ export async function PATCH(
             }
         }
 
-        const { error: rpcError } = await supabaseAdmin.rpc('change_role_with_audit', {
-            p_target_user_id: targetUserId,
-            p_tenant_id: currentUserData.tenant_id,
-            p_new_role: newRole,
-            p_actor_id: user.id
+        const { error: updateError } = await supabaseAdmin
+            .from('users')
+            .update({ role: newRole })
+            .eq('id', targetUserId)
+            .eq('tenant_id', currentUserData.tenant_id);
+
+        if (updateError) throw updateError;
+
+        await supabaseAdmin.from('audit_logs').insert({
+            tenant_id: currentUserData.tenant_id,
+            actor_id: user.id,
+            action: 'user.role_changed',
+            entity_type: 'user',
+            entity_id: targetUserId,
+            metadata: { old_role: targetUser.role, new_role: newRole },
         });
 
-        if (rpcError) throw rpcError;
         return NextResponse.json({ success: true, message: 'Role updated' });
     } catch (err: any) {
         return NextResponse.json({ error: 'Internal server error: ' + err.message }, { status: 500 });

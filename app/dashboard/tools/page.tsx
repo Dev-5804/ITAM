@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Wrench, Edit, Power, PowerOff, Loader2 } from "lucide-react";
+import { Plus, Wrench, Edit, Power, PowerOff, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function ToolsPage() {
     const [tools, setTools] = useState<any[]>([]);
@@ -13,6 +15,12 @@ export default function ToolsPage() {
     const [loading, setLoading] = useState(true);
     const [role, setRole] = useState("member");
     const [error, setError] = useState<string | null>(null);
+    const [showDialog, setShowDialog] = useState(false);
+    const [creating, setCreating] = useState(false);
+    const [formData, setFormData] = useState({ name: "", description: "", category: "" });
+    const [editTool, setEditTool] = useState<any | null>(null);
+    const [editData, setEditData] = useState({ name: "", description: "", category: "" });
+    const [saving, setSaving] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -81,6 +89,59 @@ export default function ToolsPage() {
         }
     }
 
+    async function createTool(e: React.FormEvent) {
+        e.preventDefault();
+        setCreating(true);
+        setError(null);
+        
+        try {
+            const res = await fetch("/api/tools", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData)
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+            
+            setShowDialog(false);
+            setFormData({ name: "", description: "", category: "" });
+            loadData();
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setCreating(false);
+        }
+    }
+
+    function openEdit(tool: any) {
+        setEditTool(tool);
+        setEditData({ name: tool.name, description: tool.description || "", category: tool.category || "" });
+    }
+
+    async function saveTool(e: React.FormEvent) {
+        e.preventDefault();
+        if (!editTool) return;
+        setSaving(true);
+        setError(null);
+
+        try {
+            const res = await fetch(`/api/tools/${editTool.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(editData)
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+
+            setEditTool(null);
+            loadData();
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setSaving(false);
+        }
+    }
+
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-6">
@@ -89,7 +150,10 @@ export default function ToolsPage() {
                     <p className="text-zinc-500 dark:text-zinc-400 mt-1">Manage and request access to internal systems</p>
                 </div>
                 {isAdmin && (
-                    <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20">
+                    <Button 
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20"
+                        onClick={() => setShowDialog(true)}
+                    >
                         <Plus className="mr-2 h-4 w-4" /> Add Tool
                     </Button>
                 )}
@@ -126,7 +190,7 @@ export default function ToolsPage() {
                                         </div>
                                         {isAdmin && (
                                             <div className="flex gap-1">
-                                                <Button variant="ghost" size="icon" className="h-8 w-8"><Edit className="h-4 w-4" /></Button>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(tool)}><Edit className="h-4 w-4" /></Button>
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
@@ -165,6 +229,130 @@ export default function ToolsPage() {
                     })
                 )}
             </div>
+
+            {/* Create Tool Dialog */}
+            {showDialog && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl w-full max-w-md mx-4 border border-zinc-200 dark:border-zinc-800">
+                        <div className="flex justify-between items-center p-6 border-b border-zinc-200 dark:border-zinc-800">
+                            <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Create New Tool</h2>
+                            <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => setShowDialog(false)}
+                                className="h-8 w-8"
+                            >
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </div>
+                        <form onSubmit={createTool} className="p-6 space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="name">Tool Name *</Label>
+                                <Input
+                                    id="name"
+                                    placeholder="e.g., Slack, GitHub, AWS Console"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="description">Description</Label>
+                                <Input
+                                    id="description"
+                                    placeholder="Brief description of the tool"
+                                    value={formData.description}
+                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="category">Category *</Label>
+                                <Input
+                                    id="category"
+                                    placeholder="e.g., Communication, Development, Cloud"
+                                    value={formData.category}
+                                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                    required
+                                />
+                            </div>
+                            <div className="flex gap-3 pt-4">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="flex-1"
+                                    onClick={() => setShowDialog(false)}
+                                    disabled={creating}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    className="flex-1 bg-indigo-600 hover:bg-indigo-700"
+                                    disabled={creating}
+                                >
+                                    {creating ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            Creating...
+                                        </>
+                                    ) : (
+                                        "Create Tool"
+                                    )}
+                                </Button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+            {/* Edit Tool Dialog */}
+            {editTool && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl w-full max-w-md mx-4 border border-zinc-200 dark:border-zinc-800">
+                        <div className="flex justify-between items-center p-6 border-b border-zinc-200 dark:border-zinc-800">
+                            <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Edit Tool</h2>
+                            <Button variant="ghost" size="icon" onClick={() => setEditTool(null)} className="h-8 w-8">
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </div>
+                        <form onSubmit={saveTool} className="p-6 space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-name">Tool Name *</Label>
+                                <Input
+                                    id="edit-name"
+                                    value={editData.name}
+                                    onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-description">Description</Label>
+                                <Input
+                                    id="edit-description"
+                                    value={editData.description}
+                                    onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-category">Category *</Label>
+                                <Input
+                                    id="edit-category"
+                                    value={editData.category}
+                                    onChange={(e) => setEditData({ ...editData, category: e.target.value })}
+                                    required
+                                />
+                            </div>
+                            <div className="flex gap-3 pt-4">
+                                <Button type="button" variant="outline" className="flex-1" onClick={() => setEditTool(null)} disabled={saving}>
+                                    Cancel
+                                </Button>
+                                <Button type="submit" className="flex-1 bg-indigo-600 hover:bg-indigo-700" disabled={saving}>
+                                    {saving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Saving...</> : "Save Changes"}
+                                </Button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

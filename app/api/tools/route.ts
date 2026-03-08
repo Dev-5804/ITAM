@@ -15,9 +15,26 @@ export async function GET(request: Request) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const { data: tools, error } = await supabase
+        const supabaseAdmin = await createAdminClient();
+
+        const { data: userData, error: userError } = await supabaseAdmin
+            .from('users')
+            .select('tenant_id')
+            .eq('id', user.id)
+            .single();
+
+        if (userError || !userData) {
+            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+        }
+
+        if (!userData.tenant_id) {
+            return NextResponse.json([], { status: 200 });
+        }
+
+        const { data: tools, error } = await supabaseAdmin
             .from('tools')
             .select('*')
+            .eq('tenant_id', userData.tenant_id)
             .order('created_at', { ascending: false });
 
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });

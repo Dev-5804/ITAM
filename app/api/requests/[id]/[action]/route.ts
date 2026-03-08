@@ -85,26 +85,46 @@ export async function PATCH(
                 p_reviewer_note: reviewerNote || null,
                 p_action: auditAction,
                 p_tool_name: toolName,
-                p_requester_name: 'Requester' // Simplified, we should fetch actual name if needed
-            });
-            rpcError = error;
-        } else if (action === 'revoke') {
-            const { error } = await supabaseAdmin.rpc('revoke_request_with_audit', {
-                p_req_id: id,
-                p_tenant_id: userData.tenant_id,
-                p_revoker_id: user.id,
-                p_tool_name: toolName,
                 p_requester_name: 'Requester'
             });
             rpcError = error;
+        } else if (action === 'revoke') {
+            const { error: updateErr } = await supabaseAdmin
+                .from('access_requests')
+                .update({ status: 'revoked' })
+                .eq('id', id)
+                .eq('tenant_id', userData.tenant_id)
+                .eq('status', 'approved');
+            rpcError = updateErr;
+            if (!updateErr) {
+                await supabaseAdmin.from('audit_logs').insert({
+                    tenant_id: userData.tenant_id,
+                    actor_id: user.id,
+                    action: 'request.revoked',
+                    entity_type: 'access_request',
+                    entity_id: id,
+                    metadata: { tool_name: toolName },
+                });
+            }
         } else if (action === 'cancel') {
-            const { error } = await supabaseAdmin.rpc('cancel_request_with_audit', {
-                p_req_id: id,
-                p_tenant_id: userData.tenant_id,
-                p_requester_id: user.id,
-                p_tool_name: toolName
-            });
-            rpcError = error;
+            const { error: updateErr } = await supabaseAdmin
+                .from('access_requests')
+                .update({ status: 'cancelled' })
+                .eq('id', id)
+                .eq('tenant_id', userData.tenant_id)
+                .eq('requester_id', user.id)
+                .in('status', ['pending', 'approved']);
+            rpcError = updateErr;
+            if (!updateErr) {
+                await supabaseAdmin.from('audit_logs').insert({
+                    tenant_id: userData.tenant_id,
+                    actor_id: user.id,
+                    action: 'request.cancelled',
+                    entity_type: 'access_request',
+                    entity_id: id,
+                    metadata: { tool_name: toolName },
+                });
+            }
         }
 
         if (rpcError) {

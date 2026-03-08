@@ -10,7 +10,7 @@ const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 
 const inviteSchema = z.object({
     email: z.string().email("Invalid email address"),
-    role: z.enum(["owner", "admin", "member"]),
+    role: z.enum(["admin", "member"]),
 });
 
 export async function POST(request: Request) {
@@ -79,6 +79,8 @@ export async function POST(request: Request) {
         const token = crypto.randomBytes(32).toString('hex');
 
         // Create invitation (Using Service Role because RLS prevents non-owners from seeing everything, but Admins can create)
+        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
         const { data: inviteData, error: insertError } = await supabaseAdmin
             .from('invitations')
             .insert({
@@ -86,7 +88,8 @@ export async function POST(request: Request) {
                 email,
                 role,
                 token,
-                invited_by: user.id
+                invited_by: user.id,
+                expires_at: expiresAt
             })
             .select()
             .single();

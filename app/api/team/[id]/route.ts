@@ -40,13 +40,23 @@ export async function DELETE(
             }
         }
 
-        const { error: rpcError } = await supabaseAdmin.rpc('remove_user_with_audit', {
-            p_target_user_id: targetUserId,
-            p_tenant_id: currentUserData.tenant_id,
-            p_actor_id: user.id
+        const { error: deleteError } = await supabaseAdmin
+            .from('users')
+            .delete()
+            .eq('id', targetUserId)
+            .eq('tenant_id', currentUserData.tenant_id);
+
+        if (deleteError) throw deleteError;
+
+        await supabaseAdmin.from('audit_logs').insert({
+            tenant_id: currentUserData.tenant_id,
+            actor_id: user.id,
+            action: 'user.removed',
+            entity_type: 'user',
+            entity_id: targetUserId,
+            metadata: {},
         });
 
-        if (rpcError) throw rpcError;
         return NextResponse.json({ success: true, message: 'User removed' });
     } catch (err: any) {
         return NextResponse.json({ error: 'Internal server error: ' + err.message }, { status: 500 });

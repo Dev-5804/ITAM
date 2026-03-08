@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 
 export default async function DashboardPage() {
     const supabase = await createClient()
@@ -9,18 +9,30 @@ export default async function DashboardPage() {
         redirect('/login')
     }
 
-    // Check if user has an organization
-    const { data: userData } = await supabase
+    // Use admin client to bypass RLS (my_tenant_id() in RLS requires JWT claim
+    // which may not be set if the custom claims hook isn't configured)
+    const supabaseAdmin = await createAdminClient()
+    const { data: userData } = await supabaseAdmin
         .from('users')
-        .select('tenant_id')
+        .select('tenant_id, role')
         .eq('id', user.id)
         .single()
 
-    // If user has tenant_id, redirect to plan page
-    // Note: don't join tenants here — the RLS tenant_select policy relies on
-    // my_tenant_id() from the JWT, which may be stale right after org creation.
-    // Reading tenant_id directly from the users row is always accurate.
-    if (userData?.tenant_id) {
+    let tenantId: string | null = userData?.tenant_id ?? null
+
+    // Recovery: if public.users row is missing/stale but app_metadata has tenant_id
+    // (can happen if the invitation accept set app_metadata but failed to upsert the DB row)
+    if (!tenantId && user.app_metadata?.tenant_id) {
+        tenantId = user.app_metadata.tenant_id as string
+        const role = (user.app_metadata?.role as string) || 'member'
+        const fullName = (user.user_metadata?.full_name as string) || null
+        await supabaseAdmin.from('users').upsert(
+            { id: user.id, tenant_id: tenantId, role, full_name: fullName },
+            { onConflict: 'id' }
+        )
+    }
+
+    if (tenantId) {
         redirect('/dashboard/plan')
     }
 

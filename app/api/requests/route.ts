@@ -18,7 +18,7 @@ export async function GET(request: Request) {
 
         const { data: userData, error: userError } = await supabaseAdmin
             .from('users')
-            .select('role')
+            .select('role, tenant_id')
             .eq('id', user.id)
             .single();
 
@@ -26,20 +26,24 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
-        let query = supabase.from('access_requests')
+        if (!userData.tenant_id) {
+            return NextResponse.json([], { status: 200 });
+        }
+
+        let query = supabaseAdmin.from('access_requests')
             .select(`
         *,
         tools (name),
         requester:users!requester_id (full_name, avatar_url),
         reviewer:users!reviewer_id (full_name)
       `)
+            .eq('tenant_id', userData.tenant_id)
             .order('created_at', { ascending: false });
 
-        // RLS already handles filtering by tenant_id and (if member) requester_id,
-        // but the route handler uses the standard client. We just query standard client above.
-        // Wait, the regular client is filtered by RLS! 
-        // PRD: "Requests API RLS select: members see own requests; admins and owners see all in tenant"
-        // So the regular client query is perfectly secure and filtered.
+        // Members can only see their own requests
+        if (userData.role === 'member') {
+            query = query.eq('requester_id', user.id) as typeof query;
+        }
 
         const { data: requests, error } = await query;
 
