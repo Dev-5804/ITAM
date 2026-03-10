@@ -1,7 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import { LogOut, Bell, Menu } from "lucide-react";
+import { LogOut, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 
@@ -26,11 +26,6 @@ export function Header({ userName, role }: { userName?: string, role: string }) 
                 {/* Breadcrumb or title placeholder */}
             </div>
             <div className="flex items-center gap-2 md:gap-4 text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                <Button variant="ghost" size="icon" className="relative shrink-0 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300 transition-colors rounded-full">
-                    <Bell className="h-5 w-5" />
-                    <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-indigo-600 ring-2 ring-white dark:ring-zinc-950" />
-                </Button>
-                <div className="hidden md:block h-6 w-px bg-zinc-200 dark:bg-zinc-800" />
                 <Button
                     variant="ghost"
                     onClick={handleSignOut}

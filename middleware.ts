@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
     // Inject x-pathname into the forwarded request headers so server components
     // can read it via headers(). Response headers are NOT visible to server components.
     const requestHeaders = new Headers(request.headers)
