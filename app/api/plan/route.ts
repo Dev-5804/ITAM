@@ -88,11 +88,11 @@ export async function PATCH(request: Request) {
 
         const newPlan = result.data.plan;
         let maxMembers = 5;
-        let maxTools = 3;
+        let maxTools = 10;
 
         if (newPlan === 'pro') {
-            maxMembers = 20;
-            maxTools = 10;
+            maxMembers = 25;
+            maxTools = 50;
         } else if (newPlan === 'enterprise') {
             maxMembers = 999999;
             maxTools = 999999;

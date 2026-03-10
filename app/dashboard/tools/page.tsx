@@ -21,6 +21,9 @@ export default function ToolsPage() {
     const [editTool, setEditTool] = useState<any | null>(null);
     const [editData, setEditData] = useState({ name: "", description: "", category: "" });
     const [saving, setSaving] = useState(false);
+    const [reasonDialog, setReasonDialog] = useState<{ toolId: string; toolName: string } | null>(null);
+    const [reasonText, setReasonText] = useState("");
+    const [requesting, setRequesting] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -57,18 +60,24 @@ export default function ToolsPage() {
 
     const isAdmin = role === 'admin' || role === 'owner';
 
-    async function requestAccess(toolId: string) {
+    async function submitAccessRequest() {
+        if (!reasonDialog) return;
+        setRequesting(true);
         try {
             const res = await fetch("/api/requests", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ tool_id: toolId, reason: "Self requested" })
+                body: JSON.stringify({ tool_id: reasonDialog.toolId, reason: reasonText.trim() || null })
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error);
+            setReasonDialog(null);
+            setReasonText("");
             loadData();
         } catch (err: any) {
             setError(err.message);
+        } finally {
+            setRequesting(false);
         }
     }
 
@@ -218,7 +227,7 @@ export default function ToolsPage() {
                                             className="w-full font-medium"
                                             variant={hasRequested ? "secondary" : "default"}
                                             disabled={hasRequested || !tool.is_active}
-                                            onClick={() => !hasRequested && requestAccess(tool.id)}
+                                            onClick={() => !hasRequested && setReasonDialog({ toolId: tool.id, toolName: tool.name })}
                                         >
                                             {hasRequested ? `Status: ${req.status.charAt(0).toUpperCase() + req.status.slice(1)}` : 'Request Access'}
                                         </Button>
@@ -229,6 +238,40 @@ export default function ToolsPage() {
                     })
                 )}
             </div>
+
+            {/* Request Access Dialog */}
+            {reasonDialog && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl w-full max-w-md mx-4 border border-zinc-200 dark:border-zinc-800">
+                        <div className="flex justify-between items-center p-6 border-b border-zinc-200 dark:border-zinc-800">
+                            <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Request Access</h2>
+                            <Button variant="ghost" size="icon" onClick={() => { setReasonDialog(null); setReasonText(""); }} className="h-8 w-8">
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <p className="text-sm text-zinc-600 dark:text-zinc-400">Requesting access to <span className="font-semibold text-zinc-900 dark:text-zinc-100">{reasonDialog.toolName}</span></p>
+                            <div className="space-y-2">
+                                <Label htmlFor="reason">Reason <span className="text-zinc-400 text-xs">(optional)</span></Label>
+                                <textarea
+                                    id="reason"
+                                    rows={3}
+                                    placeholder="Why do you need access to this tool?"
+                                    value={reasonText}
+                                    onChange={(e) => setReasonText(e.target.value)}
+                                    className="flex w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-transparent px-3 py-2 text-sm placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 resize-none dark:bg-zinc-950 dark:text-zinc-100"
+                                />
+                            </div>
+                            <div className="flex gap-3 pt-2">
+                                <Button type="button" variant="outline" className="flex-1" onClick={() => { setReasonDialog(null); setReasonText(""); }} disabled={requesting}>Cancel</Button>
+                                <Button type="button" className="flex-1 bg-indigo-600 hover:bg-indigo-700" onClick={submitAccessRequest} disabled={requesting}>
+                                    {requesting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Submitting...</> : "Submit Request"}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Create Tool Dialog */}
             {showDialog && (

@@ -149,3 +149,61 @@ export async function PATCH(
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
+
+export async function DELETE(
+    request: Request,
+    { params }: { params: Promise<{ id: string, action: string }> | { id: string, action: string } }
+) {
+    try {
+        const resolvedParams = await Promise.resolve(params);
+        const id = resolvedParams.id;
+
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+        const supabaseAdmin = await createAdminClient();
+        const { data: userData, error: userError } = await supabaseAdmin
+            .from('users')
+            .select('role, tenant_id')
+            .eq('id', user.id)
+            .single();
+
+        if (userError || !userData) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+        if (userData.role !== 'admin' && userData.role !== 'owner') {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+        if (!userData.tenant_id) return NextResponse.json({ error: 'No organization found' }, { status: 404 });
+
+        const { data: reqData } = await supabaseAdmin
+            .from('access_requests')
+            .select('tools(name)')
+            .eq('id', id)
+            .eq('tenant_id', userData.tenant_id)
+            .single();
+
+        if (!reqData) return NextResponse.json({ error: 'Request not found' }, { status: 404 });
+
+        const { error: deleteError } = await supabaseAdmin
+            .from('access_requests')
+            .delete()
+            .eq('id', id)
+            .eq('tenant_id', userData.tenant_id);
+
+        if (deleteError) throw deleteError;
+
+        const toolName = (reqData.tools as any)?.name || 'Unknown Tool';
+        await supabaseAdmin.from('audit_logs').insert({
+            tenant_id: userData.tenant_id,
+            actor_id: user.id,
+            action: 'request.deleted',
+            entity_type: 'access_request',
+            entity_id: id,
+            metadata: { tool_name: toolName },
+        });
+
+        return NextResponse.json({ success: true });
+    } catch (err) {
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
+}

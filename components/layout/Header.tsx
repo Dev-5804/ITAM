@@ -5,7 +5,7 @@ import { LogOut, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 
-export function Header({ userName, role }: { userName?: string, role: string }) {
+export function Header({ userName, role, onMenuClick }: { userName?: string, role: string, onMenuClick?: () => void }) {
     const router = useRouter();
 
     async function handleSignOut() {
@@ -18,7 +18,7 @@ export function Header({ userName, role }: { userName?: string, role: string }) 
     return (
         <header className="flex h-16 shrink-0 items-center justify-between border-b border-zinc-200 bg-white/80 px-4 md:px-6 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/80 sticky top-0 z-10 transition-colors">
             <div className="flex flex-1 items-center md:hidden">
-                <Button variant="ghost" size="icon" className="shrink-0 -ml-2 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">
+                <Button variant="ghost" size="icon" className="shrink-0 -ml-2 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300" onClick={onMenuClick}>
                     <Menu className="h-5 w-5" />
                 </Button>
             </div>

@@ -5,7 +5,7 @@ import { createAdminClient, createClient } from '@/lib/supabase/server';
 const toolSchema = z.object({
     name: z.string().min(1, 'Name is required'),
     description: z.string().optional(),
-    category: z.string().optional(),
+    category: z.string().min(1, 'Category is required'),
     is_active: z.boolean().default(true),
 });
 

@@ -1,8 +1,7 @@
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
-import { Sidebar } from '@/components/layout/Sidebar'
-import { Header } from '@/components/layout/Header'
+import { DashboardShell } from '@/components/layout/DashboardShell'
 import { ReactNode } from 'react'
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
@@ -61,16 +60,8 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     const userName = userData?.full_name || user?.email || 'User'
 
     return (
-        <div className="flex h-screen overflow-hidden bg-zinc-50 dark:bg-zinc-950">
-            <Sidebar role={role} tenantName={tenantName} userName={userName} />
-            <div className="flex flex-col flex-1 overflow-hidden transition-all duration-300">
-                <Header userName={userName} role={role} />
-                <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
-                    <div className="mx-auto max-w-7xl animate-in fade-in slide-in-from-bottom-4 duration-500 ease-in-out">
-                        {children}
-                    </div>
-                </main>
-            </div>
-        </div>
+        <DashboardShell role={role} tenantName={tenantName} userName={userName}>
+            {children}
+        </DashboardShell>
     )
 }

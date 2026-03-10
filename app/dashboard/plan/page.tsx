@@ -111,7 +111,7 @@ export default function PlanPage() {
             id: 'free',
             name: 'Free',
             icon: <CheckCircle className="h-5 w-5 text-zinc-500" />,
-            limits: '5 members, 3 tools',
+            limits: '5 members, 10 tools',
             price: '$0/mo',
             color: 'bg-zinc-100 hover:bg-zinc-200 text-zinc-900 border-zinc-200'
         },
@@ -119,7 +119,7 @@ export default function PlanPage() {
             id: 'pro',
             name: 'Pro',
             icon: <Zap className="h-5 w-5 text-indigo-500" />,
-            limits: '20 members, 10 tools',
+            limits: '25 members, 50 tools',
             price: '$49/mo',
             color: 'bg-indigo-600 hover:bg-indigo-700 text-white border-indigo-600'
         },

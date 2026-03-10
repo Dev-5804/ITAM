@@ -69,12 +69,8 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Failed to create user profile' }, { status: 500 })
         }
 
-        // Return success with user credentials to let client handle login
-        return NextResponse.json({ 
-            success: true,
-            email,
-            password // We'll use this on client side to sign in
-        })
+        // Return success — client will sign in using the password it already has
+        return NextResponse.json({ success: true, email })
     } catch (err) {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }

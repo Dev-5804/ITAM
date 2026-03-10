@@ -60,8 +60,8 @@ export default function SignUpPage() {
 
             // Now sign in with the client-side Supabase client
             const { error: signInError } = await supabase.auth.signInWithPassword({
-                email: data.email,
-                password: data.password,
+                email,
+                password,
             });
 
             if (signInError) {

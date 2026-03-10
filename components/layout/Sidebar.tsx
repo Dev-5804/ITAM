@@ -17,9 +17,11 @@ type SidebarProps = {
     role: string;
     tenantName: string;
     userName?: string;
+    mobileOpen?: boolean;
+    onClose?: () => void;
 };
 
-export function Sidebar({ role, tenantName, userName }: SidebarProps) {
+export function Sidebar({ role, tenantName, userName, mobileOpen, onClose }: SidebarProps) {
     const pathname = usePathname();
 
     const links = [
@@ -34,7 +36,21 @@ export function Sidebar({ role, tenantName, userName }: SidebarProps) {
     const visibleLinks = links.filter((link) => link.roles.includes(role));
 
     return (
-        <div className="flex w-64 flex-col border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
+        <>
+            {/* Mobile backdrop */}
+            {mobileOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-40 md:hidden"
+                    onClick={onClose}
+                />
+            )}
+
+            {/* Sidebar — always visible on desktop, slide-over on mobile */}
+            <div className={cn(
+                "flex w-64 flex-col border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 z-50 transition-transform duration-200",
+                "fixed inset-y-0 left-0 md:relative md:translate-x-0",
+                mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+            )}>
             <div className="flex h-16 shrink-0 items-center border-b border-zinc-200 dark:border-zinc-800 px-6">
                 <div className="flex items-center gap-2 font-bold tracking-tight text-xl">
                     <div className="bg-indigo-600 p-1.5 rounded-md flex shrink-0">
@@ -52,6 +68,7 @@ export function Sidebar({ role, tenantName, userName }: SidebarProps) {
                             <Link
                                 key={link.name}
                                 href={link.href}
+                                onClick={onClose}
                                 className={cn(
                                     "group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200",
                                     isActive
@@ -90,5 +107,6 @@ export function Sidebar({ role, tenantName, userName }: SidebarProps) {
                 </div>
             </div>
         </div>
+        </>
     );
 }

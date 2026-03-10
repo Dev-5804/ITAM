@@ -240,7 +240,7 @@ export default function TeamPage() {
                                                             <option value="member">Member</option>
                                                         </select>
                                                         <span className={member.id === currentUserId ? 'cursor-not-allowed' : ''}>
-                                                            <Button variant="ghost" size="icon" className={`h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 ${member.id === currentUserId ? 'opacity-40 pointer-events-none' : ''}`} onClick={() => setConfirmRemove({ id: member.id, name: member.name || member.email })} disabled={member.id === currentUserId}>
+                                                            <Button variant="ghost" size="icon" className={`h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 ${member.id === currentUserId ? 'opacity-40 pointer-events-none' : ''}`} onClick={() => setConfirmRemove({ id: member.id, name: member.full_name || member.email })} disabled={member.id === currentUserId}>
                                                                 <Trash2 className="h-4 w-4" />
                                                             </Button>
                                                         </span>

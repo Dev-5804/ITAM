@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, CheckCircle2, XCircle, Clock, Ban } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, Clock, Ban, X, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Label } from "@/components/ui/label";
 
 export default function RequestsPage() {
     const [requests, setRequests] = useState<any[]>([]);
@@ -13,6 +14,11 @@ export default function RequestsPage() {
     const [role, setRole] = useState("member");
     const [currentUserId, setCurrentUserId] = useState<string>("");
     const [error, setError] = useState<string | null>(null);
+    const [reviewDialog, setReviewDialog] = useState<{ id: string; action: string; toolName: string; requesterName: string } | null>(null);
+    const [reviewerNote, setReviewerNote] = useState("");
+    const [reviewing, setReviewing] = useState(false);
+    const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; toolName: string; requesterName: string } | null>(null);
+    const [deleting, setDeleting] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -48,18 +54,45 @@ export default function RequestsPage() {
 
     const isAdmin = role === 'admin' || role === 'owner';
 
-    async function updateRequest(id: string, action: string) {
+    async function deleteRequest(id: string) {
+        setDeleting(true);
+        try {
+            const res = await fetch(`/api/requests/${id}/delete`, { method: 'DELETE' });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+            setDeleteConfirm(null);
+            loadData();
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setDeleting(false);
+        }
+    }
+
+    async function updateRequest(id: string, action: string, note: string = "") {
         try {
             const res = await fetch(`/api/requests/${id}/${action}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ reviewer_note: "" })
+                body: JSON.stringify({ reviewer_note: note })
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error);
             loadData();
         } catch (err: any) {
             setError(err.message);
+        }
+    }
+
+    async function submitReview() {
+        if (!reviewDialog) return;
+        setReviewing(true);
+        try {
+            await updateRequest(reviewDialog.id, reviewDialog.action, reviewerNote.trim());
+            setReviewDialog(null);
+            setReviewerNote("");
+        } finally {
+            setReviewing(false);
         }
     }
 
@@ -138,12 +171,17 @@ export default function RequestsPage() {
                                 <CardFooter className="pt-0 flex gap-2 justify-end bg-zinc-50/50 dark:bg-zinc-950/20 pt-4 rounded-b-xl border-t border-zinc-100 dark:border-zinc-900">
                                     {isAdmin && req.status === 'pending' && (
                                         <>
-                                            <Button variant="outline" className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200" onClick={() => updateRequest(req.id, 'reject')}>Reject</Button>
-                                            <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => updateRequest(req.id, 'approve')}>Approve</Button>
+                                            <Button variant="outline" className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200" onClick={() => setReviewDialog({ id: req.id, action: 'reject', toolName, requesterName })}>Reject</Button>
+                                            <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => setReviewDialog({ id: req.id, action: 'approve', toolName, requesterName })}>Approve</Button>
                                         </>
                                     )}
                                     {isAdmin && req.status === 'approved' && (
-                                        <Button variant="outline" className="text-orange-600 hover:text-orange-700 hover:bg-orange-50" onClick={() => updateRequest(req.id, 'revoke')}>Revoke Access</Button>
+                                        <Button variant="outline" className="text-orange-600 hover:text-orange-700 hover:bg-orange-50" onClick={() => setReviewDialog({ id: req.id, action: 'revoke', toolName, requesterName })}>Revoke Access</Button>
+                                    )}
+                                    {isAdmin && (
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 ml-auto" onClick={() => setDeleteConfirm({ id: req.id, toolName, requesterName })}>
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
                                     )}
                                     {isOwnRequest && req.status === 'pending' && (
                                         <Button variant="ghost" className="text-zinc-500 hover:bg-zinc-100" onClick={() => updateRequest(req.id, 'cancel')}>Cancel Request</Button>
@@ -157,6 +195,74 @@ export default function RequestsPage() {
                     })
                 )}
             </div>
+
+            {/* Delete Confirm Modal */}
+            {deleteConfirm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl w-full max-w-md mx-4 border border-zinc-200 dark:border-zinc-800">
+                        <div className="flex justify-between items-center p-6 border-b border-zinc-200 dark:border-zinc-800">
+                            <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Delete Request</h2>
+                            <Button variant="ghost" size="icon" onClick={() => setDeleteConfirm(null)} className="h-8 w-8" disabled={deleting}>
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                                Permanently delete <span className="font-semibold text-zinc-900 dark:text-zinc-100">{deleteConfirm.requesterName}</span>'s request for <span className="font-semibold text-zinc-900 dark:text-zinc-100">{deleteConfirm.toolName}</span>? This cannot be undone.
+                            </p>
+                            <div className="flex gap-3 pt-2">
+                                <Button type="button" variant="outline" className="flex-1" onClick={() => setDeleteConfirm(null)} disabled={deleting}>Cancel</Button>
+                                <Button type="button" className="flex-1 bg-red-600 hover:bg-red-700 text-white" onClick={() => deleteRequest(deleteConfirm.id)} disabled={deleting}>
+                                    {deleting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Deleting...</> : "Delete Request"}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Reviewer Note Modal */}
+            {reviewDialog && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl w-full max-w-md mx-4 border border-zinc-200 dark:border-zinc-800">
+                        <div className="flex justify-between items-center p-6 border-b border-zinc-200 dark:border-zinc-800">
+                            <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 capitalize">{reviewDialog.action} Request</h2>
+                            <Button variant="ghost" size="icon" onClick={() => { setReviewDialog(null); setReviewerNote(""); }} className="h-8 w-8">
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                                {reviewDialog.action === 'approve' && <>Approving <span className="font-semibold text-zinc-900 dark:text-zinc-100">{reviewDialog.requesterName}</span>'s access to <span className="font-semibold text-zinc-900 dark:text-zinc-100">{reviewDialog.toolName}</span>.</>}
+                                {reviewDialog.action === 'reject' && <>Rejecting <span className="font-semibold text-zinc-900 dark:text-zinc-100">{reviewDialog.requesterName}</span>'s access request for <span className="font-semibold text-zinc-900 dark:text-zinc-100">{reviewDialog.toolName}</span>.</>}
+                                {reviewDialog.action === 'revoke' && <>Revoking <span className="font-semibold text-zinc-900 dark:text-zinc-100">{reviewDialog.requesterName}</span>'s access to <span className="font-semibold text-zinc-900 dark:text-zinc-100">{reviewDialog.toolName}</span>.</>}
+                            </p>
+                            <div className="space-y-2">
+                                <Label htmlFor="reviewer-note">Note <span className="text-zinc-400 text-xs">(optional)</span></Label>
+                                <textarea
+                                    id="reviewer-note"
+                                    rows={3}
+                                    placeholder="Add a note for the requester..."
+                                    value={reviewerNote}
+                                    onChange={(e) => setReviewerNote(e.target.value)}
+                                    className="flex w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-transparent px-3 py-2 text-sm placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 resize-none dark:bg-zinc-950 dark:text-zinc-100"
+                                />
+                            </div>
+                            <div className="flex gap-3 pt-2">
+                                <Button type="button" variant="outline" className="flex-1" onClick={() => { setReviewDialog(null); setReviewerNote(""); }} disabled={reviewing}>Cancel</Button>
+                                <Button
+                                    type="button"
+                                    className={`flex-1 text-white ${reviewDialog.action === 'approve' ? 'bg-green-600 hover:bg-green-700' : reviewDialog.action === 'reject' ? 'bg-red-600 hover:bg-red-700' : 'bg-orange-600 hover:bg-orange-700'}`}
+                                    onClick={submitReview}
+                                    disabled={reviewing}
+                                >
+                                    {reviewing ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processing...</> : `Confirm ${reviewDialog.action.charAt(0).toUpperCase() + reviewDialog.action.slice(1)}`}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
