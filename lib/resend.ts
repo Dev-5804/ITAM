@@ -1,7 +1,14 @@
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
-// Make sure to set RESEND_API_KEY in .env.local
-export const resend = new Resend(process.env.RESEND_API_KEY || 're_123456789');
+function createTransport() {
+    return nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.GMAIL_USER,
+            pass: process.env.GMAIL_APP_PASSWORD,
+        },
+    });
+}
 
 export async function sendInvitationEmail({
     email,
@@ -20,10 +27,10 @@ export async function sendInvitationEmail({
     const inviteLink = `${appUrl}/invite/${token}`;
 
     try {
-        const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
-        const data = await resend.emails.send({
-            from: `ITAM <${fromEmail}>`,
-            to: [email],
+        const transporter = createTransport();
+        const data = await transporter.sendMail({
+            from: `ITAM <${process.env.GMAIL_USER}>`,
+            to: email,
             subject: `You have been invited to join ${tenantName} on ITAM`,
             html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
@@ -91,11 +98,11 @@ export async function sendRequestNotificationEmail({
 
     if (emails.length === 0) return { success: true };
 
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
     try {
-        const data = await resend.emails.send({
-            from: `ITAM <${fromEmail}>`,
-            to: emails,
+        const transporter = createTransport();
+        const data = await transporter.sendMail({
+            from: `ITAM <${process.env.GMAIL_USER}>`,
+            to: emails.join(', '),
             subject,
             html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">${htmlContent}</div>`,
         });
