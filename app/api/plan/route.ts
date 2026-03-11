@@ -69,7 +69,8 @@ export async function GET(request: Request) {
         });
 
     } catch (err: any) {
-        return NextResponse.json({ error: 'Internal server error: ' + err.message }, { status: 500 });
+        console.error('[plan GET] Internal error:', err);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
 
@@ -138,6 +139,7 @@ export async function PATCH(request: Request) {
 
         return NextResponse.json({ success: true, message: `Plan upgraded to ${newPlan.toUpperCase()}` });
     } catch (err: any) {
-        return NextResponse.json({ error: 'Internal server error: ' + err.message }, { status: 500 });
+        console.error('[plan PATCH] Internal error:', err);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

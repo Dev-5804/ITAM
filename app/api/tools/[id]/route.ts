@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 
+const uuidSchema = z.string().uuid();
 const toolUpdateSchema = z.object({
     name: z.string().min(1, 'Name is required').optional(),
     description: z.string().optional(),
@@ -16,6 +17,10 @@ export async function PATCH(
     try {
         const resolvedParams = await Promise.resolve(params);
         const id = resolvedParams.id;
+
+        if (!uuidSchema.safeParse(id).success) {
+            return NextResponse.json({ error: 'Invalid tool ID' }, { status: 400 });
+        }
 
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();

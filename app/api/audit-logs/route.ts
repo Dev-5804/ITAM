@@ -28,7 +28,8 @@ export async function GET(request: Request) {
         }
 
         const { searchParams } = new URL(request.url);
-        const limit = parseInt(searchParams.get('limit') || '100');
+        const rawLimit = parseInt(searchParams.get('limit') || '100', 10);
+        const limit = isNaN(rawLimit) || rawLimit < 1 ? 100 : Math.min(rawLimit, 500);
 
         const { data: logs, error } = await supabaseAdmin
             .from('audit_logs')
@@ -59,6 +60,7 @@ export async function GET(request: Request) {
 
         return NextResponse.json(augmentedLogs);
     } catch (err: any) {
-        return NextResponse.json({ error: 'Internal server error: ' + err.message }, { status: 500 });
+        console.error('[audit-logs] Internal error:', err);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

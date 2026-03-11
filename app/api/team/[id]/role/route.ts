@@ -14,6 +14,10 @@ export async function PATCH(
         const resolvedParams = await Promise.resolve(params);
         const targetUserId = resolvedParams.id;
 
+        if (!z.string().uuid().safeParse(targetUserId).success) {
+            return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 });
+        }
+
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -85,6 +89,7 @@ export async function PATCH(
 
         return NextResponse.json({ success: true, message: 'Role updated' });
     } catch (err: any) {
-        return NextResponse.json({ error: 'Internal server error: ' + err.message }, { status: 500 });
+        console.error('[team/[id]/role] Internal error:', err);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

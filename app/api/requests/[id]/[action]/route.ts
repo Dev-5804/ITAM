@@ -5,8 +5,9 @@ import { sendRequestNotificationEmail } from '@/lib/resend';
 
 const actionParamsSchema = z.enum(['approve', 'reject', 'revoke', 'cancel']);
 const noteSchema = z.object({
-    reviewer_note: z.string().optional()
+    reviewer_note: z.string().max(1000).optional()
 });
+const uuidSchema = z.string().uuid();
 
 export async function PATCH(
     request: Request,
@@ -16,6 +17,10 @@ export async function PATCH(
         const resolvedParams = await Promise.resolve(params);
         const id = resolvedParams.id;
         const actionParam = resolvedParams.action;
+
+        if (!uuidSchema.safeParse(id).success) {
+            return NextResponse.json({ error: 'Invalid request ID' }, { status: 400 });
+        }
 
         const parseResult = actionParamsSchema.safeParse(actionParam);
         if (!parseResult.success) {
@@ -157,6 +162,10 @@ export async function DELETE(
     try {
         const resolvedParams = await Promise.resolve(params);
         const id = resolvedParams.id;
+
+        if (!uuidSchema.safeParse(id).success) {
+            return NextResponse.json({ error: 'Invalid request ID' }, { status: 400 });
+        }
 
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();

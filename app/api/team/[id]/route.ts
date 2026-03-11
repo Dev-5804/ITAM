@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
+
+const uuidSchema = z.string().uuid();
 
 export async function DELETE(
     request: Request,
@@ -8,6 +11,10 @@ export async function DELETE(
     try {
         const resolvedParams = await Promise.resolve(params);
         const targetUserId = resolvedParams.id;
+
+        if (!uuidSchema.safeParse(targetUserId).success) {
+            return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 });
+        }
 
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
@@ -64,6 +71,7 @@ export async function DELETE(
 
         return NextResponse.json({ success: true, message: 'User removed' });
     } catch (err: any) {
-        return NextResponse.json({ error: 'Internal server error: ' + err.message }, { status: 500 });
+        console.error('[team/[id]] Internal error:', err);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

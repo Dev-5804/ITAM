@@ -144,6 +144,7 @@ export async function DELETE(request: Request) {
 
         return NextResponse.json({ success: true });
     } catch (err: any) {
-        return NextResponse.json({ error: 'Internal server error: ' + err.message }, { status: 500 });
+        console.error('[settings] Internal error:', err);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
