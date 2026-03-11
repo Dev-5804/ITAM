@@ -44,8 +44,7 @@ export async function PATCH(
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const supabaseAdmin = await createAdminClient();
-        const { data: userData, error: userError } = await supabaseAdmin
+        const { data: userData, error: userError } = await supabase
             .from('users')
             .select('role, tenant_id, full_name')
             .eq('id', user.id)
@@ -67,7 +66,8 @@ export async function PATCH(
         }
 
         // Fetch request details
-        const { data: reqData } = await supabaseAdmin
+        const supabaseAdmin = await createAdminClient();
+        const { data: reqData } = await supabase
             .from('access_requests')
             .select('requester_id, status, tools(name)')
             .eq('id', id)
@@ -82,7 +82,7 @@ export async function PATCH(
         if (action === 'approve' || action === 'reject') {
             const status = action === 'approve' ? 'approved' : 'rejected';
             const auditAction = action === 'approve' ? 'request.approved' : 'request.rejected';
-            const { error } = await supabaseAdmin.rpc('review_request_with_audit', {
+            const { error } = await supabase.rpc('review_request_with_audit', {
                 p_req_id: id,
                 p_tenant_id: userData.tenant_id,
                 p_status: status,
@@ -94,7 +94,7 @@ export async function PATCH(
             });
             rpcError = error;
         } else if (action === 'revoke') {
-            const { error: updateErr } = await supabaseAdmin
+            const { error: updateErr } = await supabase
                 .from('access_requests')
                 .update({ status: 'revoked' })
                 .eq('id', id)
@@ -112,7 +112,7 @@ export async function PATCH(
                 });
             }
         } else if (action === 'cancel') {
-            const { error: updateErr } = await supabaseAdmin
+            const { error: updateErr } = await supabase
                 .from('access_requests')
                 .update({ status: 'cancelled' })
                 .eq('id', id)
@@ -171,8 +171,7 @@ export async function DELETE(
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const supabaseAdmin = await createAdminClient();
-        const { data: userData, error: userError } = await supabaseAdmin
+        const { data: userData, error: userError } = await supabase
             .from('users')
             .select('role, tenant_id')
             .eq('id', user.id)
@@ -184,7 +183,8 @@ export async function DELETE(
         }
         if (!userData.tenant_id) return NextResponse.json({ error: 'No organization found' }, { status: 404 });
 
-        const { data: reqData } = await supabaseAdmin
+        const supabaseAdmin = await createAdminClient();
+        const { data: reqData } = await supabase
             .from('access_requests')
             .select('tools(name)')
             .eq('id', id)
@@ -193,7 +193,7 @@ export async function DELETE(
 
         if (!reqData) return NextResponse.json({ error: 'Request not found' }, { status: 404 });
 
-        const { error: deleteError } = await supabaseAdmin
+        const { error: deleteError } = await supabase
             .from('access_requests')
             .delete()
             .eq('id', id)

@@ -14,9 +14,7 @@ export async function GET(request: Request) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const supabaseAdmin = await createAdminClient();
-
-        const { data: userData, error: userError } = await supabaseAdmin
+        const { data: userData, error: userError } = await supabase
             .from('users')
             .select('role, tenant_id')
             .eq('id', user.id)
@@ -30,7 +28,7 @@ export async function GET(request: Request) {
             return NextResponse.json([], { status: 200 });
         }
 
-        let query = supabaseAdmin.from('access_requests')
+        let query = supabase.from('access_requests')
             .select(`
         *,
         tools (name),
@@ -69,7 +67,7 @@ export async function POST(request: Request) {
 
         const supabaseAdmin = await createAdminClient();
 
-        const { data: userData, error: userError } = await supabaseAdmin
+        const { data: userData, error: userError } = await supabase
             .from('users')
             .select('role, tenant_id, full_name')
             .eq('id', user.id)
@@ -88,7 +86,7 @@ export async function POST(request: Request) {
         const { tool_id, reason } = result.data;
 
         // Get tool name
-        const { data: toolData } = await supabaseAdmin
+        const { data: toolData } = await supabase
             .from('tools')
             .select('name')
             .eq('id', tool_id)
@@ -97,7 +95,7 @@ export async function POST(request: Request) {
         if (!toolData) return NextResponse.json({ error: 'Tool not found' }, { status: 404 });
 
         // Submit request via RPC to ensure audit log
-        const { data: reqId, error: rpcError } = await supabaseAdmin.rpc('submit_request_with_audit', {
+        const { data: reqId, error: rpcError } = await supabase.rpc('submit_request_with_audit', {
             p_tenant_id: userData.tenant_id,
             p_requester_id: user.id,
             p_tool_id: tool_id,
@@ -114,7 +112,7 @@ export async function POST(request: Request) {
         }
 
         // Send email to all Admins and Owners
-        const { data: admins } = await supabaseAdmin
+        const { data: admins } = await supabase
             .from('users')
             .select('id')
             .in('role', ['admin', 'owner'])

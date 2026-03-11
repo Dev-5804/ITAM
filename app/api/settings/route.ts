@@ -12,9 +12,7 @@ export async function GET(request: Request) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const supabaseAdmin = await createAdminClient();
-
-        const { data: userData, error: userError } = await supabaseAdmin
+        const { data: userData, error: userError } = await supabase
             .from('users')
             .select('role, tenant_id')
             .eq('id', user.id)
@@ -24,7 +22,7 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: 'No organization found' }, { status: 404 });
         }
 
-        const { data: tenant, error: tenantError } = await supabaseAdmin
+        const { data: tenant, error: tenantError } = await supabase
             .from('tenants')
             .select('id, name, slug, plan, max_members, max_tools, created_at')
             .eq('id', userData.tenant_id)
@@ -52,9 +50,7 @@ export async function PATCH(request: Request) {
             return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 });
         }
 
-        const supabaseAdmin = await createAdminClient();
-
-        const { data: userData, error: userError } = await supabaseAdmin
+        const { data: userData, error: userError } = await supabase
             .from('users')
             .select('role, tenant_id')
             .eq('id', user.id)
@@ -68,7 +64,7 @@ export async function PATCH(request: Request) {
             return NextResponse.json({ error: 'Only the owner can manage settings' }, { status: 403 });
         }
 
-        const { error: updateError } = await supabaseAdmin
+        const { error: updateError } = await supabase
             .from('tenants')
             .update({ name: result.data.name })
             .eq('id', userData.tenant_id);
@@ -77,6 +73,7 @@ export async function PATCH(request: Request) {
             return NextResponse.json({ error: updateError.message }, { status: 500 });
         }
 
+        const supabaseAdmin = await createAdminClient();
         await supabaseAdmin.from('audit_logs').insert({
             tenant_id: userData.tenant_id,
             actor_id: user.id,
@@ -99,7 +96,7 @@ export async function DELETE(request: Request) {
         if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
         const supabaseAdmin = await createAdminClient();
-        const { data: userData, error: userError } = await supabaseAdmin
+        const { data: userData, error: userError } = await supabase
             .from('users')
             .select('role, tenant_id')
             .eq('id', user.id)
@@ -111,7 +108,7 @@ export async function DELETE(request: Request) {
 
         // Owners must transfer ownership or be removed by another owner first
         if (userData.role === 'owner') {
-            const { count } = await supabaseAdmin
+            const { count } = await supabase
                 .from('users')
                 .select('id', { count: 'exact', head: true })
                 .eq('tenant_id', userData.tenant_id)
@@ -135,7 +132,7 @@ export async function DELETE(request: Request) {
             metadata: {},
         });
 
-        await supabaseAdmin.from('users').delete().eq('id', user.id).eq('tenant_id', tenantId);
+        await supabase.from('users').delete().eq('id', user.id).eq('tenant_id', tenantId);
 
         // Clear app_metadata so recovery logic doesn't re-add them
         await supabaseAdmin.auth.admin.updateUserById(user.id, {

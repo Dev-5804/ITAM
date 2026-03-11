@@ -32,12 +32,8 @@ export async function POST(request: Request) {
 
         const { email, role } = result.data;
 
-        // We use service role client because we might need to check member counts cross-tenant, 
-        // or just let RLS handle it, but PRD says "Check subscription limits server-side ... Your plan allows a maximum of [N] members."
-        const supabaseAdmin = await createAdminClient();
-
         // Verify inviter role and tenant_id from the database
-        const { data: inviterData, error: inviterError } = await supabaseAdmin
+        const { data: inviterData, error: inviterError } = await supabase
             .from('users')
             .select('role, full_name, tenant_id, tenants(max_members, name)')
             .eq('id', user.id)
@@ -55,12 +51,12 @@ export async function POST(request: Request) {
         const maxMembers = (inviterData.tenants as any).max_members;
 
         // Check max_members limit including existing users and pending invitations
-        const { count: usersCount } = await supabaseAdmin
+        const { count: usersCount } = await supabase
             .from('users')
             .select('id', { count: 'exact', head: true })
             .eq('tenant_id', tenantId);
 
-        const { count: invitesCount } = await supabaseAdmin
+        const { count: invitesCount } = await supabase
             .from('invitations')
             .select('id', { count: 'exact', head: true })
             .eq('tenant_id', tenantId)
@@ -77,11 +73,10 @@ export async function POST(request: Request) {
 
         // Determine unique token
         const token = crypto.randomBytes(32).toString('hex');
-
-        // Create invitation (Using Service Role because RLS prevents non-owners from seeing everything, but Admins can create)
         const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
-        const { data: inviteData, error: insertError } = await supabaseAdmin
+        // Create invitation
+        const { data: inviteData, error: insertError } = await supabase
             .from('invitations')
             .insert({
                 tenant_id: tenantId,
@@ -98,7 +93,8 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Failed to create invitation' }, { status: 500 });
         }
 
-        // Insert Audit log via stored procedure or direct insert (we have full admin client so direct works without RLS bypass issues)
+        const supabaseAdmin = await createAdminClient();
+        // Audit log (via admin client to guarantee write)
         await supabaseAdmin.from('audit_logs').insert({
             tenant_id: tenantId,
             actor_id: user.id,

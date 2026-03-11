@@ -7,10 +7,8 @@ export async function GET(request: Request) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const supabaseAdmin = await createAdminClient();
-
         // Check role
-        const { data: userData, error: userError } = await supabaseAdmin
+        const { data: userData, error: userError } = await supabase
             .from('users')
             .select('role, tenant_id')
             .eq('id', user.id)
@@ -29,14 +27,14 @@ export async function GET(request: Request) {
         }
 
         // Get team members
-        const { data: members, error: membersError } = await supabaseAdmin
+        const { data: members, error: membersError } = await supabase
             .from('users')
             .select('id, full_name, role, created_at, avatar_url')
             .eq('tenant_id', userData.tenant_id)
             .order('created_at', { ascending: true });
 
         // Get pending invitations
-        const { data: invitations, error: invError } = await supabaseAdmin
+        const { data: invitations, error: invError } = await supabase
             .from('invitations')
             .select('id, email, role, created_at, token')
             .eq('tenant_id', userData.tenant_id)

@@ -12,9 +12,7 @@ export async function GET(request: Request) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const supabaseAdmin = await createAdminClient();
-
-        const { data: userData, error: userError } = await supabaseAdmin
+        const { data: userData, error: userError } = await supabase
             .from('users')
             .select('role, tenant_id, tenants(name, plan, max_members, max_tools)')
             .eq('id', user.id)
@@ -42,17 +40,17 @@ export async function GET(request: Request) {
         const tenantId = userData.tenant_id;
         const tenantInfo = userData.tenants as any;
 
-        const { count: membersCount } = await supabaseAdmin
+        const { count: membersCount } = await supabase
             .from('users')
             .select('id', { count: 'exact', head: true })
             .eq('tenant_id', tenantId);
 
-        const { count: toolsCount } = await supabaseAdmin
+        const { count: toolsCount } = await supabase
             .from('tools')
             .select('id', { count: 'exact', head: true })
             .eq('tenant_id', tenantId);
 
-        const { count: pendingInvites } = await supabaseAdmin
+        const { count: pendingInvites } = await supabase
             .from('invitations')
             .select('id', { count: 'exact', head: true })
             .eq('tenant_id', tenantId)
@@ -99,9 +97,7 @@ export async function PATCH(request: Request) {
             maxTools = 999999;
         }
 
-        const supabaseAdmin = await createAdminClient();
-
-        const { data: userData, error: userError } = await supabaseAdmin
+        const { data: userData, error: userError } = await supabase
             .from('users')
             .select('role, tenant_id')
             .eq('id', user.id)
@@ -121,13 +117,14 @@ export async function PATCH(request: Request) {
             return NextResponse.json({ error: 'Forbidden. Only owners can change plans.' }, { status: 403 });
         }
 
-        const { error: updateError } = await supabaseAdmin
+        const { error: updateError } = await supabase
             .from('tenants')
             .update({ plan: newPlan, max_members: maxMembers, max_tools: maxTools })
             .eq('id', userData.tenant_id);
 
         if (updateError) throw updateError;
 
+        const supabaseAdmin = await createAdminClient();
         await supabaseAdmin.from('audit_logs').insert({
             tenant_id: userData.tenant_id,
             actor_id: user.id,

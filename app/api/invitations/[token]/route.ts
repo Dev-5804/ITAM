@@ -65,9 +65,8 @@ export async function DELETE(
         const { data: { user } } = await (await createClient()).auth.getUser();
         if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const supabaseAdmin = await createAdminClient();
-
-        const { data: userData, error: userError } = await supabaseAdmin
+        const supabase = await createClient();
+        const { data: userData, error: userError } = await supabase
             .from('users')
             .select('role, tenant_id')
             .eq('id', user.id)
@@ -81,7 +80,7 @@ export async function DELETE(
             return NextResponse.json({ error: 'No organization found. Please create or join an organization first.' }, { status: 404 });
         }
 
-        const { error: deleteError } = await supabaseAdmin
+        const { error: deleteError } = await supabase
             .from('invitations')
             .delete()
             .eq('id', id)

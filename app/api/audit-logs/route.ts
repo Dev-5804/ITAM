@@ -7,9 +7,7 @@ export async function GET(request: Request) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const supabaseAdmin = await createAdminClient();
-
-        const { data: userData, error: userError } = await supabaseAdmin
+        const { data: userData, error: userError } = await supabase
             .from('users')
             .select('role, tenant_id')
             .eq('id', user.id)
@@ -31,7 +29,7 @@ export async function GET(request: Request) {
         const rawLimit = parseInt(searchParams.get('limit') || '100', 10);
         const limit = isNaN(rawLimit) || rawLimit < 1 ? 100 : Math.min(rawLimit, 500);
 
-        const { data: logs, error } = await supabaseAdmin
+        const { data: logs, error } = await supabase
             .from('audit_logs')
             .select(`
         id, created_at, action, entity_type, entity_id, metadata,

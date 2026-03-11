@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createAdminClient, createClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 
 const toolSchema = z.object({
     name: z.string().min(1, 'Name is required'),
@@ -15,9 +15,7 @@ export async function GET(request: Request) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const supabaseAdmin = await createAdminClient();
-
-        const { data: userData, error: userError } = await supabaseAdmin
+        const { data: userData, error: userError } = await supabase
             .from('users')
             .select('tenant_id')
             .eq('id', user.id)
@@ -31,7 +29,7 @@ export async function GET(request: Request) {
             return NextResponse.json([], { status: 200 });
         }
 
-        const { data: tools, error } = await supabaseAdmin
+        const { data: tools, error } = await supabase
             .from('tools')
             .select('*')
             .eq('tenant_id', userData.tenant_id)
@@ -57,10 +55,8 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 });
         }
 
-        const supabaseAdmin = await createAdminClient();
-
         // Verify user role and tenant_id
-        const { data: userData, error: userError } = await supabaseAdmin
+        const { data: userData, error: userError } = await supabase
             .from('users')
             .select('role, tenant_id, tenants(max_tools)')
             .eq('id', user.id)
@@ -82,7 +78,7 @@ export async function POST(request: Request) {
         const maxTools = (userData.tenants as any).max_tools;
 
         // Check max tools limit
-        const { count: toolsCount } = await supabaseAdmin
+        const { count: toolsCount } = await supabase
             .from('tools')
             .select('id', { count: 'exact', head: true })
             .eq('tenant_id', tenantId);
@@ -97,7 +93,7 @@ export async function POST(request: Request) {
         const { name, description, category, is_active } = result.data;
 
         // Insert tool and audit log via RPC
-        const { data: toolId, error: rpcError } = await supabaseAdmin.rpc('create_tool_with_audit', {
+        const { data: toolId, error: rpcError } = await supabase.rpc('create_tool_with_audit', {
             p_tenant_id: tenantId,
             p_name: name,
             p_description: description || null,

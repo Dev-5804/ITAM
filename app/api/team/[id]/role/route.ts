@@ -33,8 +33,7 @@ export async function PATCH(
         }
         const newRole = result.data.role;
 
-        const supabaseAdmin = await createAdminClient();
-        const { data: currentUserData, error: userError } = await supabaseAdmin
+        const { data: currentUserData, error: userError } = await supabase
             .from('users')
             .select('role, tenant_id')
             .eq('id', user.id)
@@ -48,7 +47,7 @@ export async function PATCH(
             return NextResponse.json({ error: 'No organization found. Please create or join an organization first.' }, { status: 404 });
         }
 
-        const { data: targetUser } = await supabaseAdmin
+        const { data: targetUser, error: targetUserError } = await supabase
             .from('users')
             .select('role')
             .eq('id', targetUserId)
@@ -59,7 +58,7 @@ export async function PATCH(
 
         // Check if demoting the last owner
         if (targetUser.role === 'owner' && newRole !== 'owner') {
-            const { count } = await supabaseAdmin
+            const { count } = await supabase
                 .from('users')
                 .select('id', { count: 'exact', head: true })
                 .eq('tenant_id', currentUserData.tenant_id)
@@ -70,7 +69,7 @@ export async function PATCH(
             }
         }
 
-        const { error: updateError } = await supabaseAdmin
+        const { error: updateError } = await supabase
             .from('users')
             .update({ role: newRole })
             .eq('id', targetUserId)
@@ -78,6 +77,7 @@ export async function PATCH(
 
         if (updateError) throw updateError;
 
+        const supabaseAdmin = await createAdminClient();
         await supabaseAdmin.from('audit_logs').insert({
             tenant_id: currentUserData.tenant_id,
             actor_id: user.id,

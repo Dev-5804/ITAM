@@ -20,8 +20,7 @@ export async function DELETE(
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const supabaseAdmin = await createAdminClient();
-        const { data: currentUserData, error: userError } = await supabaseAdmin
+        const { data: currentUserData, error: userError } = await supabase
             .from('users')
             .select('role, tenant_id')
             .eq('id', user.id)
@@ -36,7 +35,7 @@ export async function DELETE(
         }
 
         if (user.id === targetUserId) {
-            const { count } = await supabaseAdmin
+            const { count } = await supabase
                 .from('users')
                 .select('id', { count: 'exact', head: true })
                 .eq('tenant_id', currentUserData.tenant_id)
@@ -47,7 +46,7 @@ export async function DELETE(
             }
         }
 
-        const { error: deleteError } = await supabaseAdmin
+        const { error: deleteError } = await supabase
             .from('users')
             .delete()
             .eq('id', targetUserId)
@@ -56,6 +55,7 @@ export async function DELETE(
         if (deleteError) throw deleteError;
 
         // Clear app_metadata so the dashboard recovery logic cannot re-add this user
+        const supabaseAdmin = await createAdminClient();
         await supabaseAdmin.auth.admin.updateUserById(targetUserId, {
             app_metadata: { tenant_id: null, role: null },
         });

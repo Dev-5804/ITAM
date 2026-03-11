@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createAdminClient, createClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 
 const uuidSchema = z.string().uuid();
 const toolUpdateSchema = z.object({
@@ -32,9 +32,7 @@ export async function PATCH(
             return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 });
         }
 
-        const supabaseAdmin = await createAdminClient();
-
-        const { data: userData, error: userError } = await supabaseAdmin
+        const { data: userData, error: userError } = await supabase
             .from('users')
             .select('role, tenant_id')
             .eq('id', user.id)
@@ -56,7 +54,7 @@ export async function PATCH(
             action = 'tool.updated';
         }
 
-        const { error: rpcError } = await supabaseAdmin.rpc('update_tool_with_audit', {
+        const { error: rpcError } = await supabase.rpc('update_tool_with_audit', {
             p_tool_id: id,
             p_tenant_id: userData.tenant_id,
             p_name: result.data.name || null,
