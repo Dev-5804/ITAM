@@ -11,13 +11,21 @@ import { Label } from "@/components/ui/label";
 const ACTION_OPTIONS = [
     { value: "", label: "All actions" },
     { value: "user.joined", label: "user.joined" },
-    { value: "request.created", label: "request.created" },
+    { value: "user.invited", label: "user.invited" },
+    { value: "user.removed", label: "user.removed" },
+    { value: "user.left", label: "user.left" },
+    { value: "user.role_changed", label: "user.role_changed" },
+    { value: "request.submitted", label: "request.submitted" },
     { value: "request.approved", label: "request.approved" },
     { value: "request.rejected", label: "request.rejected" },
     { value: "request.revoked", label: "request.revoked" },
+    { value: "request.cancelled", label: "request.cancelled" },
+    { value: "request.deleted", label: "request.deleted" },
     { value: "tool.created", label: "tool.created" },
     { value: "tool.updated", label: "tool.updated" },
+    { value: "tool.deleted", label: "tool.deleted" },
     { value: "org.updated", label: "org.updated" },
+    { value: "plan.changed", label: "plan.changed" },
 ];
 
 export default function AuditLogsPage() {
