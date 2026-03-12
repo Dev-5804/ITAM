@@ -10,10 +10,16 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
+interface Tenant {
+    name: string;
+    slug: string;
+    plan: string;
+    created_at: string;
+}
+
 export default function SettingsPage() {
     const router = useRouter();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const [tenant, setTenant] = useState<any>(null);
+    const [tenant, setTenant] = useState<Tenant | null>(null);
     const [role, setRole] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
