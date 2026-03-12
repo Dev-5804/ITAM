@@ -43,6 +43,7 @@ export async function GET(request: Request) {
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
         // Patch emails from Auth since public.users doesn't have it explicitly
+        const supabaseAdmin = await createAdminClient();
         const { data: authUsers } = await supabaseAdmin.auth.admin.listUsers();
 
         const augmentedLogs = logs.map(log => {
@@ -50,6 +51,7 @@ export async function GET(request: Request) {
             return {
                 ...log,
                 actor: {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     name: (log.users as any)?.full_name || 'System User',
                     email: actorEmail
                 }
@@ -57,7 +59,7 @@ export async function GET(request: Request) {
         });
 
         return NextResponse.json(augmentedLogs);
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error('[audit-logs] Internal error:', err);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }

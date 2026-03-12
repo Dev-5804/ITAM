@@ -40,11 +40,13 @@ export async function GET(
         return NextResponse.json({
             email: invite.email,
             role: invite.role,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             tenantName: (invite.tenants as any).name,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             inviterName: (invite.users as any)?.full_name || 'A team member',
             userExists,
         });
-    } catch (err) {
+    } catch {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
@@ -92,7 +94,7 @@ export async function DELETE(
         }
 
         return NextResponse.json({ success: true });
-    } catch (err) {
+    } catch {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

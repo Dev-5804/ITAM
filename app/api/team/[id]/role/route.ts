@@ -47,7 +47,7 @@ export async function PATCH(
             return NextResponse.json({ error: 'No organization found. Please create or join an organization first.' }, { status: 404 });
         }
 
-        const { data: targetUser, error: targetUserError } = await supabase
+        const { data: targetUser } = await supabase
             .from('users')
             .select('role')
             .eq('id', targetUserId)
@@ -88,7 +88,7 @@ export async function PATCH(
         });
 
         return NextResponse.json({ success: true, message: 'Role updated' });
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error('[team/[id]/role] Internal error:', err);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }

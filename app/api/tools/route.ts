@@ -9,7 +9,7 @@ const toolSchema = z.object({
     is_active: z.boolean().default(true),
 });
 
-export async function GET(request: Request) {
+export async function GET() {
     try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
@@ -38,7 +38,7 @@ export async function GET(request: Request) {
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
         return NextResponse.json(tools);
-    } catch (err) {
+    } catch {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
@@ -75,6 +75,7 @@ export async function POST(request: Request) {
         }
 
         const tenantId = userData.tenant_id;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const maxTools = (userData.tenants as any).max_tools;
 
         // Check max tools limit
@@ -111,7 +112,7 @@ export async function POST(request: Request) {
         }
 
         return NextResponse.json({ id: toolId, message: 'Tool created successfully' });
-    } catch (err) {
+    } catch {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

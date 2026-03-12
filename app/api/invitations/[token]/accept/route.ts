@@ -128,7 +128,7 @@ export async function POST(
 
         // Return success — client will handle sign-in so cookies are set properly
         return NextResponse.json({ success: true, email: invite.email });
-    } catch (err) {
+    } catch {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

@@ -10,7 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function ToolsPage() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [tools, setTools] = useState<any[]>([]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [requests, setRequests] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [role, setRole] = useState("member");
@@ -18,6 +20,7 @@ export default function ToolsPage() {
     const [showDialog, setShowDialog] = useState(false);
     const [creating, setCreating] = useState(false);
     const [formData, setFormData] = useState({ name: "", description: "", category: "" });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [editTool, setEditTool] = useState<any | null>(null);
     const [editData, setEditData] = useState({ name: "", description: "", category: "" });
     const [saving, setSaving] = useState(false);
@@ -74,8 +77,8 @@ export default function ToolsPage() {
             setReasonDialog(null);
             setReasonText("");
             loadData();
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'An error occurred');
         } finally {
             setRequesting(false);
         }
@@ -93,8 +96,8 @@ export default function ToolsPage() {
                 throw new Error(data.error);
             }
             loadData();
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'An error occurred');
         }
     }
 
@@ -115,13 +118,14 @@ export default function ToolsPage() {
             setShowDialog(false);
             setFormData({ name: "", description: "", category: "" });
             loadData();
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'An error occurred');
         } finally {
             setCreating(false);
         }
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     function openEdit(tool: any) {
         setEditTool(tool);
         setEditData({ name: tool.name, description: tool.description || "", category: tool.category || "" });
@@ -144,8 +148,8 @@ export default function ToolsPage() {
 
             setEditTool(null);
             loadData();
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'An error occurred');
         } finally {
             setSaving(false);
         }

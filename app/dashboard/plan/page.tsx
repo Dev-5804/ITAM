@@ -59,7 +59,7 @@ export default function PlanPage() {
                         return;
                     }
                 }
-            } catch (err: any) {
+            } catch {
                 setError("Failed to load plan details");
             }
         }
@@ -68,6 +68,7 @@ export default function PlanPage() {
 
     async function loadRazorpayScript(): Promise<boolean> {
         return new Promise((resolve) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             if ((window as any).Razorpay) { resolve(true); return; }
             const script = document.createElement('script')
             script.src = 'https://checkout.razorpay.com/v1/checkout.js'
@@ -92,8 +93,8 @@ export default function PlanPage() {
                 if (!res.ok) throw new Error(data.error)
                 setSuccess(data.message)
                 await loadData()
-            } catch (err: any) {
-                setError(err.message)
+            } catch (err: unknown) {
+                setError(err instanceof Error ? err.message : 'An error occurred')
             } finally {
                 setUpgrading(false)
             }
@@ -115,6 +116,7 @@ export default function PlanPage() {
             if (!orderRes.ok) throw new Error(orderData.error)
 
             await new Promise<void>((resolve, reject) => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const rzp = new (window as any).Razorpay({
                     key:         orderData.keyId,
                     amount:      orderData.amount,
@@ -122,6 +124,7 @@ export default function PlanPage() {
                     order_id:    orderData.orderId,
                     name:        'ITAM',
                     description: orderData.label,
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     handler: async (response: any) => {
                         try {
                             const verifyRes = await fetch('/api/payments/verify', {
@@ -139,7 +142,7 @@ export default function PlanPage() {
                             setSuccess(`Successfully upgraded to ${newPlan.toUpperCase()} plan!`)
                             await loadData()
                             resolve()
-                        } catch (err: any) {
+                        } catch (err: unknown) {
                             reject(err)
                         }
                     },
@@ -148,8 +151,8 @@ export default function PlanPage() {
                 })
                 rzp.open()
             })
-        } catch (err: any) {
-            if (err.message !== 'cancelled') setError(err.message)
+        } catch (err: unknown) {
+            if (err instanceof Error && err.message !== 'cancelled') setError(err.message)
         } finally {
             setUpgrading(false)
         }
@@ -191,7 +194,7 @@ export default function PlanPage() {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-6">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight text-zinc-950 dark:text-zinc-50">Plan & Billing</h1>
-                    <p className="text-zinc-500 dark:text-zinc-400 mt-1">Manage your organisation's subscription and limits</p>
+                    <p className="text-zinc-500 dark:text-zinc-400 mt-1">Manage your organisation&apos;s subscription and limits</p>
                 </div>
                 <div className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-semibold uppercase tracking-wider bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
                     Current: {currentPlan}

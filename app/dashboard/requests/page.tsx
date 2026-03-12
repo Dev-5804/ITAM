@@ -9,6 +9,7 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
 
 export default function RequestsPage() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [requests, setRequests] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [role, setRole] = useState("member");
@@ -62,8 +63,8 @@ export default function RequestsPage() {
             if (!res.ok) throw new Error(data.error);
             setDeleteConfirm(null);
             loadData();
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'An error occurred');
         } finally {
             setDeleting(false);
         }
@@ -79,8 +80,8 @@ export default function RequestsPage() {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error);
             loadData();
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'An error occurred');
         }
     }
 
@@ -162,7 +163,7 @@ export default function RequestsPage() {
                                 <CardContent className="pb-4">
                                     {req.reason ? (
                                         <div className="bg-zinc-50 dark:bg-zinc-900/50 p-3 rounded-lg border border-zinc-100 dark:border-zinc-800 text-sm italic text-zinc-600 dark:text-zinc-400">
-                                            "{req.reason}"
+                                            &quot;{req.reason}&quot;
                                         </div>
                                     ) : (
                                         <p className="text-sm text-zinc-500">No specific reason provided.</p>
@@ -208,7 +209,7 @@ export default function RequestsPage() {
                         </div>
                         <div className="p-6 space-y-4">
                             <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                                Permanently delete <span className="font-semibold text-zinc-900 dark:text-zinc-100">{deleteConfirm.requesterName}</span>'s request for <span className="font-semibold text-zinc-900 dark:text-zinc-100">{deleteConfirm.toolName}</span>? This cannot be undone.
+                                Permanently delete <span className="font-semibold text-zinc-900 dark:text-zinc-100">{deleteConfirm.requesterName}</span>&apos;s request for <span className="font-semibold text-zinc-900 dark:text-zinc-100">{deleteConfirm.toolName}</span>? This cannot be undone.
                             </p>
                             <div className="flex gap-3 pt-2">
                                 <Button type="button" variant="outline" className="flex-1" onClick={() => setDeleteConfirm(null)} disabled={deleting}>Cancel</Button>
@@ -233,9 +234,9 @@ export default function RequestsPage() {
                         </div>
                         <div className="p-6 space-y-4">
                             <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                                {reviewDialog.action === 'approve' && <>Approving <span className="font-semibold text-zinc-900 dark:text-zinc-100">{reviewDialog.requesterName}</span>'s access to <span className="font-semibold text-zinc-900 dark:text-zinc-100">{reviewDialog.toolName}</span>.</>}
-                                {reviewDialog.action === 'reject' && <>Rejecting <span className="font-semibold text-zinc-900 dark:text-zinc-100">{reviewDialog.requesterName}</span>'s access request for <span className="font-semibold text-zinc-900 dark:text-zinc-100">{reviewDialog.toolName}</span>.</>}
-                                {reviewDialog.action === 'revoke' && <>Revoking <span className="font-semibold text-zinc-900 dark:text-zinc-100">{reviewDialog.requesterName}</span>'s access to <span className="font-semibold text-zinc-900 dark:text-zinc-100">{reviewDialog.toolName}</span>.</>}
+                                {reviewDialog.action === 'approve' && <>Approving <span className="font-semibold text-zinc-900 dark:text-zinc-100">{reviewDialog.requesterName}</span>&apos;s access to <span className="font-semibold text-zinc-900 dark:text-zinc-100">{reviewDialog.toolName}</span>.</>}
+                                {reviewDialog.action === 'reject' && <>Rejecting <span className="font-semibold text-zinc-900 dark:text-zinc-100">{reviewDialog.requesterName}</span>&apos;s access request for <span className="font-semibold text-zinc-900 dark:text-zinc-100">{reviewDialog.toolName}</span>.</>}
+                                {reviewDialog.action === 'revoke' && <>Revoking <span className="font-semibold text-zinc-900 dark:text-zinc-100">{reviewDialog.requesterName}</span>&apos;s access to <span className="font-semibold text-zinc-900 dark:text-zinc-100">{reviewDialog.toolName}</span>.</>}
                             </p>
                             <div className="space-y-2">
                                 <Label htmlFor="reviewer-note">Note <span className="text-zinc-400 text-xs">(optional)</span></Label>

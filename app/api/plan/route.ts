@@ -6,7 +6,7 @@ const planSchema = z.object({
     plan: z.enum(['free', 'pro', 'enterprise'])
 });
 
-export async function GET(request: Request) {
+export async function GET() {
     try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
@@ -38,6 +38,7 @@ export async function GET(request: Request) {
         }
 
         const tenantId = userData.tenant_id;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const tenantInfo = userData.tenants as any;
 
         const { count: membersCount } = await supabase
@@ -66,7 +67,7 @@ export async function GET(request: Request) {
             }
         });
 
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error('[plan GET] Internal error:', err);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
@@ -129,7 +130,7 @@ export async function PATCH(request: Request) {
         if (rpcError) throw rpcError;
 
         return NextResponse.json({ success: true, message: `Plan upgraded to ${newPlan.toUpperCase()}` });
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error('[plan PATCH] Internal error:', err);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Settings, Building2, Loader2, AlertCircle, CheckCircle2, LogOut } from "lucide-react";
+import { Building2, Loader2, AlertCircle, CheckCircle2, LogOut } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 
 export default function SettingsPage() {
     const router = useRouter();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [tenant, setTenant] = useState<any>(null);
     const [role, setRole] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
@@ -31,8 +32,8 @@ export default function SettingsPage() {
                 setTenant(data.tenant);
                 setRole(data.role);
                 setOrgName(data.tenant.name);
-            } catch (err: any) {
-                setError(err.message);
+            } catch (err: unknown) {
+                setError(err instanceof Error ? err.message : 'An error occurred');
             }
             setLoading(false);
         }
@@ -52,11 +53,11 @@ export default function SettingsPage() {
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error);
-            setTenant((prev: any) => ({ ...prev, name: orgName }));
+            setTenant((prev) => prev ? { ...prev, name: orgName } : prev);
             setSuccess(true);
             setTimeout(() => setSuccess(false), 3000);
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'An error occurred');
         } finally {
             setSaving(false);
         }
@@ -71,8 +72,8 @@ export default function SettingsPage() {
             if (!res.ok) throw new Error(data.error);
             router.push('/dashboard/welcome');
             router.refresh();
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'An error occurred');
             setLeaving(false);
             setConfirmLeave(false);
         }
@@ -116,7 +117,7 @@ export default function SettingsPage() {
                             <Building2 className="h-5 w-5 text-zinc-400" />
                             <CardTitle>Organisation Details</CardTitle>
                         </div>
-                        <CardDescription>Update your organisation's display name.</CardDescription>
+                        <CardDescription>Update your organisation&apos;s display name.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleSave} className="space-y-4">

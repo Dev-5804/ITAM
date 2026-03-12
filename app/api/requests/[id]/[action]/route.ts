@@ -35,7 +35,7 @@ export async function PATCH(
                 const body = await request.json();
                 const noteResult = noteSchema.safeParse(body);
                 if (noteResult.success) reviewerNote = noteResult.data.reviewer_note;
-            } catch (e) {
+            } catch {
                 // Body is optional
             }
         }
@@ -74,6 +74,7 @@ export async function PATCH(
             .single();
 
         if (!reqData) return NextResponse.json({ error: 'Request not found' }, { status: 404 });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const toolName = (reqData.tools as any)?.name || 'Unknown Tool';
 
         // Execute RPC
@@ -139,7 +140,7 @@ export async function PATCH(
         }
 
         return NextResponse.json({ success: true, message: `Request ${action}d successfully` });
-    } catch (err) {
+    } catch {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
@@ -181,6 +182,7 @@ export async function DELETE(
 
         if (!reqData) return NextResponse.json({ error: 'Request not found' }, { status: 404 });
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const toolName = (reqData.tools as any)?.name || 'Unknown Tool';
         const { error: deleteError } = await supabase.rpc('delete_request_with_audit', {
             p_request_id: id,
@@ -192,7 +194,7 @@ export async function DELETE(
         if (deleteError) throw deleteError;
 
         return NextResponse.json({ success: true });
-    } catch (err) {
+    } catch {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

@@ -15,12 +15,13 @@ const inviteSchema = z.object({
 
 export async function POST(request: Request) {
     try {
-        const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
+        const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? request.headers.get('x-real-ip') ?? 'unknown';
         if (!checkRateLimit(ip, RATE_LIMIT_COUNT, RATE_LIMIT_WINDOW_MS)) {
             return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
         }
 
-        const { data: { user } } = await (await createClient()).auth.getUser();
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
         const body = await request.json();
@@ -48,6 +49,7 @@ export async function POST(request: Request) {
         }
 
         const tenantId = inviterData.tenant_id;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const maxMembers = (inviterData.tenants as any).max_members;
 
         // Check max_members limit including existing users and pending invitations
@@ -108,13 +110,14 @@ export async function POST(request: Request) {
         await sendInvitationEmail({
             email,
             inviterName: inviterData.full_name || 'A team member',
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             tenantName: (inviterData.tenants as any).name,
             role,
             token,
         });
 
         return NextResponse.json({ message: 'Invitation sent' });
-    } catch (err) {
+    } catch {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

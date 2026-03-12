@@ -8,7 +8,7 @@ const requestSchema = z.object({
     reason: z.string().optional(),
 });
 
-export async function GET(request: Request) {
+export async function GET() {
     try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
@@ -48,7 +48,7 @@ export async function GET(request: Request) {
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
         return NextResponse.json(requests);
-    } catch (err) {
+    } catch {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
@@ -100,7 +100,9 @@ export async function POST(request: Request) {
             p_requester_id: user.id,
             p_tool_id: tool_id,
             p_reason: reason || null,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             p_tool_name: (toolData as any).name,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             p_requester_name: (userData as any).full_name || user.email
         });
 
@@ -142,7 +144,7 @@ export async function POST(request: Request) {
         }
 
         return NextResponse.json({ id: reqId, message: 'Request submitted successfully' });
-    } catch (err) {
+    } catch {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

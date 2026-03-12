@@ -39,8 +39,8 @@ export default function LoginPage() {
 
             router.push("/dashboard");
             router.refresh();
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'An error occurred');
             setLoading(false);
         }
     }
@@ -60,8 +60,8 @@ export default function LoginPage() {
             if (authError) {
                 throw new Error(authError.message);
             }
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'An error occurred');
             setGoogleLoading(false);
         }
     }

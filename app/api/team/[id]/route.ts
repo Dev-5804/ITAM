@@ -34,14 +34,25 @@ export async function DELETE(
             return NextResponse.json({ error: 'No organization found. Please create or join an organization first.' }, { status: 404 });
         }
 
-        if (user.id === targetUserId) {
+        const { data: targetUser } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', targetUserId)
+            .eq('tenant_id', currentUserData.tenant_id)
+            .single();
+
+        if (!targetUser) {
+            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+        }
+
+        if (targetUser.role === 'owner') {
             const { count } = await supabase
                 .from('users')
-                .select('id', { count: 'exact', head: true })
+                .select('*', { count: 'exact', head: true })
                 .eq('tenant_id', currentUserData.tenant_id)
                 .eq('role', 'owner');
 
-            if (count && count <= 1) {
+            if ((count ?? 0) <= 1) {
                 return NextResponse.json({ error: 'You cannot remove the only owner of this tenant.' }, { status: 403 });
             }
         }
@@ -70,7 +81,7 @@ export async function DELETE(
         });
 
         return NextResponse.json({ success: true, message: 'User removed' });
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error('[team/[id]] Internal error:', err);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }

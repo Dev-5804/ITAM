@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 
-export async function GET(request: Request) {
+export async function GET() {
     try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
@@ -34,7 +34,7 @@ export async function GET(request: Request) {
             .order('created_at', { ascending: true });
 
         // Get pending invitations
-        const { data: invitations, error: invError } = await supabase
+        const { data: invitations } = await supabase
             .from('invitations')
             .select('id, email, role, created_at, token')
             .eq('tenant_id', userData.tenant_id)
@@ -44,6 +44,7 @@ export async function GET(request: Request) {
         if (membersError) return NextResponse.json({ error: membersError.message }, { status: 500 });
 
         // Merge emails from auth
+        const supabaseAdmin = await createAdminClient();
         const { data: authUsers } = await supabaseAdmin.auth.admin.listUsers();
         const membersWithEmail = members.map(m => ({
             ...m,
@@ -55,7 +56,7 @@ export async function GET(request: Request) {
             invitations: invitations || [],
             currentUserRole: userData.role
         });
-    } catch (err) {
+    } catch {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

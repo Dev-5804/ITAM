@@ -29,8 +29,8 @@ export default function SignUpPage() {
                 },
             });
             if (authError) throw new Error(authError.message);
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'An error occurred');
             setGoogleLoading(false);
         }
     }
@@ -71,8 +71,8 @@ export default function SignUpPage() {
             // Redirect to login page after successful signup
             router.push("/dashboard");
             router.refresh();
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'An error occurred');
             setLoading(false);
         }
     }

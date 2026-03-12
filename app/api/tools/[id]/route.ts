@@ -73,7 +73,7 @@ export async function PATCH(
         }
 
         return NextResponse.json({ success: true, message: 'Tool updated successfully' });
-    } catch (err) {
+    } catch {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

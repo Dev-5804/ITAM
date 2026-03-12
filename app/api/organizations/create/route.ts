@@ -21,7 +21,7 @@ function slugify(text: string) {
 
 export async function POST(request: Request) {
     try {
-        const ip = request.headers.get('x-forwarded-for') || '127.0.0.1'
+        const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? request.headers.get('x-real-ip') ?? 'unknown'
         if (!checkRateLimit(ip, RATE_LIMIT_COUNT, RATE_LIMIT_WINDOW_MS)) {
             return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 })
         }

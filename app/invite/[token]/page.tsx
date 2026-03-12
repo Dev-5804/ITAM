@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
-import { useRouter } from "next/navigation";
 import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +20,6 @@ interface InviteData {
 export default function InvitePage({ params }: { params: Promise<{ token: string }> }) {
     const resolvedParams = use(params);
     const token = resolvedParams.token;
-    const router = useRouter();
 
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -35,8 +33,8 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error);
                 setInvite(data);
-            } catch (err: any) {
-                setError(err.message);
+            } catch (err: unknown) {
+                setError(err instanceof Error ? err.message : 'An error occurred');
             } finally {
                 setLoading(false);
             }
@@ -54,7 +52,7 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
         const password = formData.get("password") as string;
 
         try {
-            const body: any = { password };
+            const body: { password: string; fullName?: string } = { password };
             if (fullName) body.fullName = fullName;
 
             const response = await fetch(`/api/invitations/${token}/accept`, {
@@ -82,8 +80,8 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
 
             // Hard redirect so server components re-render with the new session
             window.location.href = "/dashboard";
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'An error occurred');
             setSubmitting(false);
         }
     }
@@ -99,7 +97,7 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
                         <div className="mx-auto bg-indigo-500/10 p-3 rounded-full w-12 h-12 flex items-center justify-center mb-4 text-indigo-600">
                             <CheckCircle className="w-6 h-6" />
                         </div>
-                        <CardTitle className="text-2xl font-bold">You've been invited!</CardTitle>
+                        <CardTitle className="text-2xl font-bold">You&apos;ve been invited!</CardTitle>
                         <CardDescription>Join your team on ITAM</CardDescription>
                     </CardHeader>
                     <CardContent>

@@ -6,7 +6,7 @@ const settingsSchema = z.object({
     name: z.string().min(2, 'Organization name must be at least 2 characters').max(100),
 });
 
-export async function GET(request: Request) {
+export async function GET() {
     try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
@@ -33,7 +33,7 @@ export async function GET(request: Request) {
         }
 
         return NextResponse.json({ tenant, role: userData.role });
-    } catch (err) {
+    } catch {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
@@ -84,12 +84,12 @@ export async function PATCH(request: Request) {
         });
 
         return NextResponse.json({ success: true });
-    } catch (err) {
+    } catch {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE() {
     try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
@@ -140,7 +140,7 @@ export async function DELETE(request: Request) {
         });
 
         return NextResponse.json({ success: true });
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error('[settings] Internal error:', err);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }

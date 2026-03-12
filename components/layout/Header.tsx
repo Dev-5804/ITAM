@@ -5,7 +5,7 @@ import { LogOut, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 
-export function Header({ userName, role, onMenuClick }: { userName?: string, role: string, onMenuClick?: () => void }) {
+export function Header({ onMenuClick }: { userName?: string, role?: string, onMenuClick?: () => void }) {
     const router = useRouter();
 
     async function handleSignOut() {

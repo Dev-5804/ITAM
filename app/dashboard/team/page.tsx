@@ -10,7 +10,9 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 export default function TeamPage() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [members, setMembers] = useState<any[]>([]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [invitations, setInvitations] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [role, setRole] = useState("member");
@@ -69,8 +71,8 @@ export default function TeamPage() {
             if (!res.ok) throw new Error(data.error);
             setInviteEmail("");
             loadData();
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'An error occurred');
         } finally {
             setInviting(false);
         }
@@ -88,8 +90,8 @@ export default function TeamPage() {
                 throw new Error(data.error);
             }
             loadData();
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'An error occurred');
         }
     }
 
@@ -104,8 +106,8 @@ export default function TeamPage() {
             }
             setConfirmRemove(null);
             loadData();
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'An error occurred');
         } finally {
             setRemoving(false);
         }
@@ -117,8 +119,8 @@ export default function TeamPage() {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Failed to delete invitation");
             loadData();
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'An error occurred');
         }
     }
 
@@ -127,7 +129,7 @@ export default function TeamPage() {
             <div className="flex flex-col items-center justify-center py-24 text-center">
                 <Shield className="h-12 w-12 text-zinc-300 mb-4" />
                 <h2 className="text-xl font-bold">Access Denied</h2>
-                <p className="text-zinc-500 mt-2">You don't have permission to view the team directory.</p>
+                <p className="text-zinc-500 mt-2">You don&apos;t have permission to view the team directory.</p>
             </div>
         );
     }

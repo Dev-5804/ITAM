@@ -43,8 +43,8 @@ export default function CreateOrganizationPage() {
             // Redirect to dashboard after creating organization
             router.push("/dashboard");
             router.refresh();
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'An error occurred');
             setLoading(false);
         }
     }
@@ -94,7 +94,7 @@ export default function CreateOrganizationPage() {
                                 autoFocus
                             />
                             <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                                You'll become the owner of this organization
+                                You&apos;ll become the owner of this organization
                             </p>
                         </div>
 
