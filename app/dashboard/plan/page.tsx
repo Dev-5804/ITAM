@@ -66,25 +66,92 @@ export default function PlanPage() {
         setLoading(false);
     }
 
-    async function updatePlan(newPlan: string) {
-        if (!confirm(`Are you sure you want to change to the ${newPlan.toUpperCase()} plan?`)) return;
-        setUpgrading(true);
-        setError(null);
-        setSuccess(null);
+    async function loadRazorpayScript(): Promise<boolean> {
+        return new Promise((resolve) => {
+            if ((window as any).Razorpay) { resolve(true); return; }
+            const script = document.createElement('script')
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+            script.onload = () => resolve(true)
+            script.onerror = () => resolve(false)
+            document.body.appendChild(script)
+        })
+    }
+
+    async function handleUpgrade(newPlan: string) {
+        // Downgrade to free is free — no payment needed
+        if (newPlan === 'free') {
+            if (!confirm('Downgrade to the Free plan? Your limits will be reduced.')) return
+            setUpgrading(true); setError(null); setSuccess(null)
+            try {
+                const res = await fetch('/api/plan', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ plan: 'free' }),
+                })
+                const data = await res.json()
+                if (!res.ok) throw new Error(data.error)
+                setSuccess(data.message)
+                await loadData()
+            } catch (err: any) {
+                setError(err.message)
+            } finally {
+                setUpgrading(false)
+            }
+            return
+        }
+
+        // Paid upgrade — create Razorpay order then open checkout
+        setUpgrading(true); setError(null); setSuccess(null)
         try {
-            const res = await fetch('/api/plan', {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ plan: newPlan })
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error);
-            setSuccess(data.message);
-            await loadData();
+            const loaded = await loadRazorpayScript()
+            if (!loaded) throw new Error('Failed to load payment gateway. Please try again.')
+
+            const orderRes = await fetch('/api/payments/create-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ plan: newPlan }),
+            })
+            const orderData = await orderRes.json()
+            if (!orderRes.ok) throw new Error(orderData.error)
+
+            await new Promise<void>((resolve, reject) => {
+                const rzp = new (window as any).Razorpay({
+                    key:         orderData.keyId,
+                    amount:      orderData.amount,
+                    currency:    orderData.currency,
+                    order_id:    orderData.orderId,
+                    name:        'ITAM',
+                    description: orderData.label,
+                    handler: async (response: any) => {
+                        try {
+                            const verifyRes = await fetch('/api/payments/verify', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    razorpay_order_id:   response.razorpay_order_id,
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_signature:  response.razorpay_signature,
+                                    plan:                newPlan,
+                                }),
+                            })
+                            const verifyData = await verifyRes.json()
+                            if (!verifyRes.ok) throw new Error(verifyData.error)
+                            setSuccess(`Successfully upgraded to ${newPlan.toUpperCase()} plan!`)
+                            await loadData()
+                            resolve()
+                        } catch (err: any) {
+                            reject(err)
+                        }
+                    },
+                    modal: { ondismiss: () => reject(new Error('cancelled')) },
+                    theme: { color: '#4F46E5' },
+                })
+                rzp.open()
+            })
         } catch (err: any) {
-            setError(err.message);
+            if (err.message !== 'cancelled') setError(err.message)
         } finally {
-            setUpgrading(false);
+            setUpgrading(false)
         }
     }
 
@@ -115,22 +182,8 @@ export default function PlanPage() {
             price: '$0/mo',
             color: 'bg-zinc-100 hover:bg-zinc-200 text-zinc-900 border-zinc-200'
         },
-        {
-            id: 'pro',
-            name: 'Pro',
-            icon: <Zap className="h-5 w-5 text-indigo-500" />,
-            limits: '25 members, 50 tools',
-            price: '$49/mo',
-            color: 'bg-indigo-600 hover:bg-indigo-700 text-white border-indigo-600'
-        },
-        {
-            id: 'enterprise',
-            name: 'Enterprise',
-            icon: <Crown className="h-5 w-5 text-purple-500" />,
-            limits: 'Unlimited members & tools',
-            price: 'Custom',
-            color: 'bg-purple-600 hover:bg-purple-700 text-white border-purple-600'
-        }
+        { id: 'pro',        name: 'Pro',        icon: <Zap className="h-5 w-5 text-indigo-500" />,    limits: '25 members, 50 tools',         price: '₹499/mo',  color: 'bg-indigo-600 hover:bg-indigo-700 text-white border-indigo-600' },
+        { id: 'enterprise', name: 'Enterprise', icon: <Crown className="h-5 w-5 text-purple-500" />, limits: 'Unlimited members & tools', price: '₹1,499/mo', color: 'bg-purple-600 hover:bg-purple-700 text-white border-purple-600' }
     ];
 
     return (
@@ -210,7 +263,7 @@ export default function PlanPage() {
                         </CardContent>
                         <CardFooter className="pt-0 relative z-10">
                             <Button
-                                onClick={() => updatePlan(p.id)}
+                                onClick={() => handleUpgrade(p.id)}
                                 disabled={upgrading || currentPlan === p.id}
                                 className={`w-full ${currentPlan === p.id ? 'bg-zinc-100 text-zinc-500 hover:bg-zinc-100 dark:bg-zinc-900 dark:text-zinc-500' : p.color}`}
                                 variant={currentPlan === p.id ? 'secondary' : 'default'}
