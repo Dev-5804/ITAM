@@ -16,7 +16,7 @@ CREATE POLICY users_owner_delete ON users FOR DELETE
     id != auth.uid()
     AND tenant_id IS NOT NULL
     AND tenant_id = my_tenant_id()
-    AND (SELECT role FROM users WHERE id = auth.uid() AND tenant_id = my_tenant_id()) = 'owner'
+    AND (auth.jwt() ->> 'user_role') = 'owner'
   );
 
 -- Users: user can delete their own row (leave org)
@@ -27,12 +27,12 @@ CREATE POLICY users_self_delete ON users FOR DELETE
 CREATE POLICY requests_admin_delete ON access_requests FOR DELETE
   USING (
     tenant_id = my_tenant_id()
-    AND (SELECT role FROM users WHERE id = auth.uid() AND tenant_id = my_tenant_id()) IN ('admin', 'owner')
+    AND (auth.jwt() ->> 'user_role') IN ('admin', 'owner')
   );
 
 -- Invitations: admin/owner can delete pending invitations in their tenant
 CREATE POLICY invitations_admin_delete ON invitations FOR DELETE
   USING (
     tenant_id = my_tenant_id()
-    AND (SELECT role FROM users WHERE id = auth.uid() AND tenant_id = my_tenant_id()) IN ('admin', 'owner')
+    AND (auth.jwt() ->> 'user_role') IN ('admin', 'owner')
   );

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createAdminClient, createClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 
 const planSchema = z.object({
     plan: z.enum(['free', 'pro', 'enterprise'])
@@ -117,22 +117,16 @@ export async function PATCH(request: Request) {
             return NextResponse.json({ error: 'Forbidden. Only owners can change plans.' }, { status: 403 });
         }
 
-        const { error: updateError } = await supabase
-            .from('tenants')
-            .update({ plan: newPlan, max_members: maxMembers, max_tools: maxTools })
-            .eq('id', userData.tenant_id);
-
-        if (updateError) throw updateError;
-
-        const supabaseAdmin = await createAdminClient();
-        await supabaseAdmin.from('audit_logs').insert({
-            tenant_id: userData.tenant_id,
-            actor_id: user.id,
-            action: 'plan.changed',
-            entity_type: 'tenant',
-            entity_id: userData.tenant_id,
-            metadata: { new_plan: newPlan, max_members: maxMembers, max_tools: maxTools },
+        const { error: rpcError } = await supabase.rpc('update_plan_with_audit', {
+            p_tenant_id: userData.tenant_id,
+            p_new_plan: newPlan,
+            p_max_members: maxMembers,
+            p_max_tools: maxTools,
+            p_actor_id: user.id,
+            p_metadata: { new_plan: newPlan, max_members: maxMembers, max_tools: maxTools },
         });
+
+        if (rpcError) throw rpcError;
 
         return NextResponse.json({ success: true, message: `Plan upgraded to ${newPlan.toUpperCase()}` });
     } catch (err: any) {

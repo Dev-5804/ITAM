@@ -68,7 +68,7 @@ CREATE POLICY users_self_update ON users FOR UPDATE
 
 CREATE POLICY users_admin_update ON users FOR UPDATE
   USING (tenant_id IS NOT NULL AND tenant_id = my_tenant_id() AND
-    (SELECT role FROM users WHERE id = auth.uid()) IN ('admin','owner'));
+    (auth.jwt() ->> 'user_role') IN ('admin', 'owner'));
 
 -- 5.1 RLS: tenants
 CREATE POLICY tenant_select ON tenants FOR SELECT
@@ -76,7 +76,7 @@ CREATE POLICY tenant_select ON tenants FOR SELECT
 
 CREATE POLICY tenant_update ON tenants FOR UPDATE
   USING (id = my_tenant_id() AND
-    (SELECT role FROM users WHERE id = auth.uid() AND tenant_id = my_tenant_id()) = 'owner');
+    (auth.jwt() ->> 'user_role') = 'owner');
 
 -- 4.2 Custom claims hook function (Moved here because it references the users table)
 CREATE OR REPLACE FUNCTION add_custom_claims(event JSONB)
@@ -90,7 +90,7 @@ BEGIN
     FROM public.users WHERE id = (event->>'user_id')::UUID;
   IF user_row IS NOT NULL THEN
     claims := jsonb_set(claims, '{tenant_id}', to_jsonb(user_row.tenant_id));
-    claims := jsonb_set(claims, '{role}', to_jsonb(user_row.role));
+    claims := jsonb_set(claims, '{user_role}', to_jsonb(user_row.role));
   END IF;
   RETURN jsonb_set(event, '{claims}', claims);
 END;
@@ -120,11 +120,11 @@ CREATE POLICY tools_select ON tools FOR SELECT
 
 CREATE POLICY tools_insert ON tools FOR INSERT
   WITH CHECK (tenant_id = my_tenant_id() AND
-    (SELECT role FROM users WHERE id = auth.uid()) IN ('admin','owner'));
+    (auth.jwt() ->> 'user_role') IN ('admin', 'owner'));
 
 CREATE POLICY tools_update ON tools FOR UPDATE
   USING (tenant_id = my_tenant_id() AND
-    (SELECT role FROM users WHERE id = auth.uid()) IN ('admin','owner'));
+    (auth.jwt() ->> 'user_role') IN ('admin', 'owner'));
 
 
 -- 3.4 Table: access_requests
@@ -157,7 +157,7 @@ ALTER TABLE access_requests ENABLE ROW LEVEL SECURITY;
 CREATE POLICY requests_select ON access_requests FOR SELECT
   USING (tenant_id = my_tenant_id() AND (
     requester_id = auth.uid() OR
-    (SELECT role FROM users WHERE id = auth.uid()) IN ('admin','owner')
+    (auth.jwt() ->> 'user_role') IN ('admin', 'owner')
   ));
 
 CREATE POLICY requests_insert ON access_requests FOR INSERT
@@ -165,7 +165,7 @@ CREATE POLICY requests_insert ON access_requests FOR INSERT
 
 CREATE POLICY requests_admin_update ON access_requests FOR UPDATE
   USING (tenant_id = my_tenant_id() AND
-    (SELECT role FROM users WHERE id = auth.uid()) IN ('admin','owner'));
+    (auth.jwt() ->> 'user_role') IN ('admin', 'owner'));
 
 CREATE POLICY requests_member_cancel ON access_requests FOR UPDATE
   USING (tenant_id = my_tenant_id() AND
@@ -191,7 +191,7 @@ ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
 -- Hard Rule: Do not create an UPDATE or DELETE policy on audit_logs.
 CREATE POLICY audit_select ON audit_logs FOR SELECT
   USING (tenant_id = my_tenant_id() AND
-    (SELECT role FROM users WHERE id = auth.uid()) IN ('admin','owner'));
+    (auth.jwt() ->> 'user_role') IN ('admin', 'owner'));
 
 CREATE POLICY audit_insert ON audit_logs FOR INSERT
   WITH CHECK (tenant_id = my_tenant_id());
@@ -217,11 +217,11 @@ ALTER TABLE invitations ENABLE ROW LEVEL SECURITY;
 -- 5.6 RLS: invitations
 CREATE POLICY invitations_select ON invitations FOR SELECT
   USING (tenant_id = my_tenant_id() AND
-    (SELECT role FROM users WHERE id = auth.uid()) IN ('admin','owner'));
+    (auth.jwt() ->> 'user_role') IN ('admin', 'owner'));
 
 CREATE POLICY invitations_insert ON invitations FOR INSERT
   WITH CHECK (tenant_id = my_tenant_id() AND
-    (SELECT role FROM users WHERE id = auth.uid()) IN ('admin','owner'));
+    (auth.jwt() ->> 'user_role') IN ('admin', 'owner'));
 
 
 -- 4.4 Helper function for sign-up transaction

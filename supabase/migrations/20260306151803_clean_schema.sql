@@ -183,7 +183,7 @@ CREATE POLICY users_admin_update ON users FOR UPDATE
   USING (
     tenant_id IS NOT NULL 
     AND tenant_id = my_tenant_id() 
-    AND (SELECT role FROM users WHERE id = auth.uid() AND tenant_id = my_tenant_id()) IN ('admin', 'owner')
+    AND (auth.jwt() ->> 'user_role') IN ('admin', 'owner')
   );
 
 -- RLS: tenants
@@ -193,7 +193,7 @@ CREATE POLICY tenant_select ON tenants FOR SELECT
 CREATE POLICY tenant_update ON tenants FOR UPDATE
   USING (
     id = my_tenant_id() 
-    AND (SELECT role FROM users WHERE id = auth.uid() AND tenant_id = my_tenant_id()) = 'owner'
+    AND (auth.jwt() ->> 'user_role') = 'owner'
   );
 
 -- RLS: tools
@@ -203,13 +203,13 @@ CREATE POLICY tools_select ON tools FOR SELECT
 CREATE POLICY tools_insert ON tools FOR INSERT
   WITH CHECK (
     tenant_id = my_tenant_id() 
-    AND (SELECT role FROM users WHERE id = auth.uid() AND tenant_id = my_tenant_id()) IN ('admin', 'owner')
+    AND (auth.jwt() ->> 'user_role') IN ('admin', 'owner')
   );
 
 CREATE POLICY tools_update ON tools FOR UPDATE
   USING (
     tenant_id = my_tenant_id() 
-    AND (SELECT role FROM users WHERE id = auth.uid() AND tenant_id = my_tenant_id()) IN ('admin', 'owner')
+    AND (auth.jwt() ->> 'user_role') IN ('admin', 'owner')
   );
 
 -- RLS: access_requests
@@ -225,7 +225,7 @@ CREATE POLICY requests_insert ON access_requests FOR INSERT
 CREATE POLICY requests_admin_update ON access_requests FOR UPDATE
   USING (
     tenant_id = my_tenant_id() 
-    AND (SELECT role FROM users WHERE id = auth.uid() AND tenant_id = my_tenant_id()) IN ('admin', 'owner')
+    AND (auth.jwt() ->> 'user_role') IN ('admin', 'owner')
   );
 
 CREATE POLICY requests_member_cancel ON access_requests FOR UPDATE
@@ -239,7 +239,7 @@ CREATE POLICY requests_member_cancel ON access_requests FOR UPDATE
 CREATE POLICY audit_select ON audit_logs FOR SELECT
   USING (
     tenant_id = my_tenant_id() 
-    AND (SELECT role FROM users WHERE id = auth.uid() AND tenant_id = my_tenant_id()) IN ('admin', 'owner')
+    AND (auth.jwt() ->> 'user_role') IN ('admin', 'owner')
   );
 
 CREATE POLICY audit_insert ON audit_logs FOR INSERT
@@ -249,13 +249,13 @@ CREATE POLICY audit_insert ON audit_logs FOR INSERT
 CREATE POLICY invitations_select ON invitations FOR SELECT
   USING (
     email = (SELECT email FROM auth.users WHERE id = auth.uid()) 
-    OR (tenant_id = my_tenant_id() AND (SELECT role FROM users WHERE id = auth.uid() AND tenant_id = my_tenant_id()) IN ('admin', 'owner'))
+    OR (tenant_id = my_tenant_id() AND (auth.jwt() ->> 'user_role') IN ('admin', 'owner'))
   );
 
 CREATE POLICY invitations_insert ON invitations FOR INSERT
   WITH CHECK (
     tenant_id = my_tenant_id() 
-    AND (SELECT role FROM users WHERE id = auth.uid() AND tenant_id = my_tenant_id()) IN ('admin', 'owner')
+    AND (auth.jwt() ->> 'user_role') IN ('admin', 'owner')
   );
 
 -- ============================================

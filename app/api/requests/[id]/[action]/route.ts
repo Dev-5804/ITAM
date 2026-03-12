@@ -94,42 +94,31 @@ export async function PATCH(
             });
             rpcError = error;
         } else if (action === 'revoke') {
-            const { error: updateErr } = await supabase
-                .from('access_requests')
-                .update({ status: 'revoked' })
-                .eq('id', id)
-                .eq('tenant_id', userData.tenant_id)
-                .eq('status', 'approved');
-            rpcError = updateErr;
-            if (!updateErr) {
-                await supabaseAdmin.from('audit_logs').insert({
-                    tenant_id: userData.tenant_id,
-                    actor_id: user.id,
-                    action: 'request.revoked',
-                    entity_type: 'access_request',
-                    entity_id: id,
-                    metadata: { tool_name: toolName },
-                });
-            }
+            const { error } = await supabase.rpc('update_request_status_with_audit', {
+                p_request_id: id,
+                p_tenant_id: userData.tenant_id,
+                p_new_status: 'revoked',
+                p_from_statuses: ['approved'],
+                p_reviewer_id: user.id,
+                p_reviewer_note: reviewerNote || null,
+                p_actor_id: user.id,
+                p_action: 'request.revoked',
+                p_metadata: { tool_name: toolName },
+            });
+            rpcError = error;
         } else if (action === 'cancel') {
-            const { error: updateErr } = await supabase
-                .from('access_requests')
-                .update({ status: 'cancelled' })
-                .eq('id', id)
-                .eq('tenant_id', userData.tenant_id)
-                .eq('requester_id', user.id)
-                .in('status', ['pending', 'approved']);
-            rpcError = updateErr;
-            if (!updateErr) {
-                await supabaseAdmin.from('audit_logs').insert({
-                    tenant_id: userData.tenant_id,
-                    actor_id: user.id,
-                    action: 'request.cancelled',
-                    entity_type: 'access_request',
-                    entity_id: id,
-                    metadata: { tool_name: toolName },
-                });
-            }
+            const { error } = await supabase.rpc('update_request_status_with_audit', {
+                p_request_id: id,
+                p_tenant_id: userData.tenant_id,
+                p_new_status: 'cancelled',
+                p_from_statuses: ['pending', 'approved'],
+                p_reviewer_id: null,
+                p_reviewer_note: null,
+                p_actor_id: user.id,
+                p_action: 'request.cancelled',
+                p_metadata: { tool_name: toolName },
+            });
+            rpcError = error;
         }
 
         if (rpcError) {
@@ -183,7 +172,6 @@ export async function DELETE(
         }
         if (!userData.tenant_id) return NextResponse.json({ error: 'No organization found' }, { status: 404 });
 
-        const supabaseAdmin = await createAdminClient();
         const { data: reqData } = await supabase
             .from('access_requests')
             .select('tools(name)')
@@ -193,23 +181,15 @@ export async function DELETE(
 
         if (!reqData) return NextResponse.json({ error: 'Request not found' }, { status: 404 });
 
-        const { error: deleteError } = await supabase
-            .from('access_requests')
-            .delete()
-            .eq('id', id)
-            .eq('tenant_id', userData.tenant_id);
+        const toolName = (reqData.tools as any)?.name || 'Unknown Tool';
+        const { error: deleteError } = await supabase.rpc('delete_request_with_audit', {
+            p_request_id: id,
+            p_tenant_id: userData.tenant_id,
+            p_actor_id: user.id,
+            p_metadata: { tool_name: toolName },
+        });
 
         if (deleteError) throw deleteError;
-
-        const toolName = (reqData.tools as any)?.name || 'Unknown Tool';
-        await supabaseAdmin.from('audit_logs').insert({
-            tenant_id: userData.tenant_id,
-            actor_id: user.id,
-            action: 'request.deleted',
-            entity_type: 'access_request',
-            entity_id: id,
-            metadata: { tool_name: toolName },
-        });
 
         return NextResponse.json({ success: true });
     } catch (err) {
