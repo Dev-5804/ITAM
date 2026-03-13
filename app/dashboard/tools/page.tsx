@@ -27,6 +27,8 @@ export default function ToolsPage() {
     const [reasonDialog, setReasonDialog] = useState<{ toolId: string; toolName: string } | null>(null);
     const [reasonText, setReasonText] = useState("");
     const [requesting, setRequesting] = useState(false);
+    const [statusDialog, setStatusDialog] = useState<{ id: string; currentStatus: boolean; toolName: string } | null>(null);
+    const [togglingStatus, setTogglingStatus] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -85,6 +87,7 @@ export default function ToolsPage() {
     }
 
     async function toggleStatus(id: string, currentStatus: boolean) {
+        setTogglingStatus(true);
         try {
             const res = await fetch(`/api/tools/${id}`, {
                 method: "PATCH",
@@ -96,8 +99,11 @@ export default function ToolsPage() {
                 throw new Error(data.error);
             }
             loadData();
+            setStatusDialog(null);
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'An error occurred');
+        } finally {
+            setTogglingStatus(false);
         }
     }
 
@@ -208,7 +214,7 @@ export default function ToolsPage() {
                                                     variant="ghost"
                                                     size="icon"
                                                     className="h-8 w-8 text-zinc-500"
-                                                    onClick={() => toggleStatus(tool.id, tool.is_active)}
+                                                    onClick={() => setStatusDialog({ id: tool.id, currentStatus: tool.is_active, toolName: tool.name })}
                                                 >
                                                     {tool.is_active ? <PowerOff className="h-4 w-4 text-red-500" /> : <Power className="h-4 w-4 text-green-500" />}
                                                 </Button>
@@ -242,6 +248,37 @@ export default function ToolsPage() {
                     })
                 )}
             </div>
+
+            {/* Toggle Tool Status Dialog */}
+            {statusDialog && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl w-full max-w-md mx-4 border border-zinc-200 dark:border-zinc-800">
+                        <div className="flex justify-between items-center p-6 border-b border-zinc-200 dark:border-zinc-800">
+                            <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Confirm Status Change</h2>
+                            <Button variant="ghost" size="icon" onClick={() => setStatusDialog(null)} className="h-8 w-8" disabled={togglingStatus}>
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                                Are you sure you want to turn {statusDialog.currentStatus ? 'off' : 'on'}{' '}
+                                <span className="font-semibold text-zinc-900 dark:text-zinc-100">{statusDialog.toolName}</span>?
+                            </p>
+                            <div className="flex gap-3 pt-2">
+                                <Button type="button" variant="outline" className="flex-1" onClick={() => setStatusDialog(null)} disabled={togglingStatus}>Cancel</Button>
+                                <Button
+                                    type="button"
+                                    className={`flex-1 ${statusDialog.currentStatus ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} text-white`}
+                                    onClick={() => toggleStatus(statusDialog.id, statusDialog.currentStatus)}
+                                    disabled={togglingStatus}
+                                >
+                                    {togglingStatus ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Saving...</> : `Turn ${statusDialog.currentStatus ? 'Off' : 'On'}`}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Request Access Dialog */}
             {reasonDialog && (
