@@ -53,18 +53,21 @@ export async function POST(request: Request) {
         const maxMembers = (inviterData.tenants as any).max_members;
 
         // Check max_members limit including existing users and pending invitations
-        const { count: usersCount } = await supabase
-            .from('users')
-            .select('id', { count: 'exact', head: true })
-            .eq('tenant_id', tenantId);
+        const [usersResult, invitesResult] = await Promise.all([
+            supabase
+                .from('users')
+                .select('id', { count: 'exact', head: true })
+                .eq('tenant_id', tenantId),
+            supabase
+                .from('invitations')
+                .select('id', { count: 'exact', head: true })
+                .eq('tenant_id', tenantId)
+                .is('accepted_at', null),
+        ]);
 
-        const { count: invitesCount } = await supabase
-            .from('invitations')
-            .select('id', { count: 'exact', head: true })
-            .eq('tenant_id', tenantId)
-            .is('accepted_at', null);
-
-        const totalCount = (usersCount || 0) + (invitesCount || 0);
+        const usersCount = usersResult.count || 0;
+        const invitesCount = invitesResult.count || 0;
+        const totalCount = usersCount + invitesCount;
 
         if (totalCount >= maxMembers) {
             return NextResponse.json(

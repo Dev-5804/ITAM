@@ -29,22 +29,26 @@ export async function GET(request: Request) {
         const rawLimit = parseInt(searchParams.get('limit') || '100', 10);
         const limit = isNaN(rawLimit) || rawLimit < 1 ? 100 : Math.min(rawLimit, 500);
 
-        const { data: logs, error } = await supabase
-            .from('audit_logs')
-            .select(`
+        // Fetch logs and auth user emails in parallel.
+        const supabaseAdmin = await createAdminClient();
+        const [logsResult, authUsersResult] = await Promise.all([
+            supabase
+                .from('audit_logs')
+                .select(`
         id, created_at, action, entity_type, entity_id, metadata,
         actor_id,
         users!audit_logs_actor_id_fkey (full_name)
       `)
-            .eq('tenant_id', userData.tenant_id)
-            .order('created_at', { ascending: false })
-            .limit(limit);
+                .eq('tenant_id', userData.tenant_id)
+                .order('created_at', { ascending: false })
+                .limit(limit),
+            supabaseAdmin.auth.admin.listUsers(),
+        ]);
 
-        if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+        if (logsResult.error) return NextResponse.json({ error: logsResult.error.message }, { status: 500 });
 
-        // Patch emails from Auth since public.users doesn't have it explicitly
-        const supabaseAdmin = await createAdminClient();
-        const { data: authUsers } = await supabaseAdmin.auth.admin.listUsers();
+        const logs = logsResult.data || [];
+        const authUsers = authUsersResult.data;
 
         const augmentedLogs = logs.map(log => {
             const actorEmail = authUsers?.users.find(u => u.id === log.actor_id)?.email || 'Unknown';

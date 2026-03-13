@@ -41,29 +41,33 @@ export async function GET() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const tenantInfo = userData.tenants as any;
 
-        const { count: membersCount } = await supabase
-            .from('users')
-            .select('id', { count: 'exact', head: true })
-            .eq('tenant_id', tenantId);
+        const [membersResult, toolsResult, invitesResult] = await Promise.all([
+            supabase
+                .from('users')
+                .select('id', { count: 'exact', head: true })
+                .eq('tenant_id', tenantId),
+            supabase
+                .from('tools')
+                .select('id', { count: 'exact', head: true })
+                .eq('tenant_id', tenantId),
+            supabase
+                .from('invitations')
+                .select('id', { count: 'exact', head: true })
+                .eq('tenant_id', tenantId)
+                .is('accepted_at', null),
+        ]);
 
-        const { count: toolsCount } = await supabase
-            .from('tools')
-            .select('id', { count: 'exact', head: true })
-            .eq('tenant_id', tenantId);
-
-        const { count: pendingInvites } = await supabase
-            .from('invitations')
-            .select('id', { count: 'exact', head: true })
-            .eq('tenant_id', tenantId)
-            .is('accepted_at', null);
+        const membersCount = membersResult.count || 0;
+        const toolsCount = toolsResult.count || 0;
+        const pendingInvites = invitesResult.count || 0;
 
         return NextResponse.json({
             plan: tenantInfo.plan,
             max_members: tenantInfo.max_members,
             max_tools: tenantInfo.max_tools,
             usage: {
-                members: (membersCount || 0) + (pendingInvites || 0),
-                tools: toolsCount || 0
+                members: membersCount + pendingInvites,
+                tools: toolsCount
             }
         });
 

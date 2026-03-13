@@ -26,22 +26,26 @@ export async function GET() {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
-        // Get team members
-        const { data: members, error: membersError } = await supabase
-            .from('users')
-            .select('id, full_name, role, created_at, avatar_url')
-            .eq('tenant_id', userData.tenant_id)
-            .order('created_at', { ascending: true });
+        // Get team members and pending invitations in parallel
+        const [membersResult, invitationsResult] = await Promise.all([
+            supabase
+                .from('users')
+                .select('id, full_name, role, created_at, avatar_url')
+                .eq('tenant_id', userData.tenant_id)
+                .order('created_at', { ascending: true }),
+            supabase
+                .from('invitations')
+                .select('id, email, role, created_at, token')
+                .eq('tenant_id', userData.tenant_id)
+                .is('accepted_at', null)
+                .order('created_at', { ascending: false }),
+        ]);
 
-        // Get pending invitations
-        const { data: invitations } = await supabase
-            .from('invitations')
-            .select('id, email, role, created_at, token')
-            .eq('tenant_id', userData.tenant_id)
-            .is('accepted_at', null)
-            .order('created_at', { ascending: false });
+        if (membersResult.error) return NextResponse.json({ error: membersResult.error.message }, { status: 500 });
+        if (invitationsResult.error) return NextResponse.json({ error: invitationsResult.error.message }, { status: 500 });
 
-        if (membersError) return NextResponse.json({ error: membersError.message }, { status: 500 });
+        const members = membersResult.data || [];
+        const invitations = invitationsResult.data || [];
 
         // Merge emails from auth
         const supabaseAdmin = await createAdminClient();
@@ -53,7 +57,7 @@ export async function GET() {
 
         return NextResponse.json({
             members: membersWithEmail,
-            invitations: invitations || [],
+            invitations,
             currentUserRole: userData.role
         });
     } catch {
