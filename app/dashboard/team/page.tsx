@@ -31,24 +31,47 @@ export default function TeamPage() {
 
     async function loadData() {
         setLoading(true);
+        setError(null);
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        if (!user) {
+            setLoading(false);
+            return;
+        }
         setCurrentUserId(user.id);
 
+        // Read role directly from DB first so UI doesn't incorrectly fall back to member
+        // if the team API has a transient failure.
+        const { data: roleData } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', user.id)
+            .maybeSingle();
+        if (roleData?.role) setRole(roleData.role);
+
         try {
-            const res = await fetch('/api/team');
+            let res = await fetch('/api/team');
+
+            // If JWT claims are stale, refresh once and retry.
+            if (res.status === 403) {
+                await supabase.auth.refreshSession();
+                res = await fetch('/api/team');
+            }
+
             if (res.ok) {
                 const data = await res.json();
-                setRole(data.currentUserRole || 'member');
+                setRole(data.currentUserRole || roleData?.role || 'member');
                 setMembers(data.members || []);
                 setInvitations(data.invitations || []);
             } else if (res.status === 403) {
-                // Member role — no access to team management
-                setRole('member');
+                // True member role — no access to team management.
+                setRole(roleData?.role || 'member');
+            } else {
+                const data = await res.json().catch(() => ({ error: 'Failed to load team data' }));
+                setError(data.error || 'Failed to load team data');
             }
-        } catch (e) {
-            console.error(e);
+        } catch (e: unknown) {
+            setError(e instanceof Error ? e.message : 'Failed to load team data');
         }
 
         setLoading(false);
@@ -125,6 +148,17 @@ export default function TeamPage() {
     }
 
     if (!isAdminOrOwner && !loading) {
+        if (error) {
+            return (
+                <div className="flex flex-col items-center justify-center py-24 text-center">
+                    <Alert variant="destructive" className="max-w-xl">
+                        <AlertTitle>Unable to load team data</AlertTitle>
+                        <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                    <Button className="mt-4" onClick={loadData}>Retry</Button>
+                </div>
+            );
+        }
         return (
             <div className="flex flex-col items-center justify-center py-24 text-center">
                 <Shield className="h-12 w-12 text-zinc-300 mb-4" />

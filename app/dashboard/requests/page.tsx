@@ -169,7 +169,7 @@ export default function RequestsPage() {
                                         <p className="text-sm text-zinc-500">No specific reason provided.</p>
                                     )}
                                 </CardContent>
-                                <CardFooter className="pt-0 flex gap-2 justify-end bg-zinc-50/50 dark:bg-zinc-950/20 pt-4 rounded-b-xl border-t border-zinc-100 dark:border-zinc-900">
+                                <CardFooter className="flex gap-2 justify-end bg-zinc-50/50 dark:bg-zinc-950/20 pt-4 rounded-b-xl border-t border-zinc-100 dark:border-zinc-900">
                                     {isAdmin && req.status === 'pending' && (
                                         <>
                                             <Button variant="outline" className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200" onClick={() => setReviewDialog({ id: req.id, action: 'reject', toolName, requesterName })}>Reject</Button>

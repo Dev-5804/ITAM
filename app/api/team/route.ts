@@ -42,14 +42,23 @@ export async function GET() {
         ]);
 
         if (membersResult.error) return NextResponse.json({ error: membersResult.error.message }, { status: 500 });
-        if (invitationsResult.error) return NextResponse.json({ error: invitationsResult.error.message }, { status: 500 });
+        if (invitationsResult.error) {
+            console.error('[team] Invitations query failed; continuing without invitations:', invitationsResult.error.message);
+        }
 
         const members = membersResult.data || [];
-        const invitations = invitationsResult.data || [];
+        const invitations = invitationsResult.error ? [] : (invitationsResult.data || []);
 
-        // Merge emails from auth
-        const supabaseAdmin = await createAdminClient();
-        const { data: authUsers } = await supabaseAdmin.auth.admin.listUsers();
+        // Merge emails from auth. If admin lookup fails (e.g., missing service role key),
+        // return team data with fallback emails instead of failing the whole endpoint.
+        let authUsers: { users: Array<{ id: string; email?: string | null }> } | null = null;
+        try {
+            const supabaseAdmin = await createAdminClient();
+            const { data } = await supabaseAdmin.auth.admin.listUsers();
+            authUsers = data as { users: Array<{ id: string; email?: string | null }> };
+        } catch (err: unknown) {
+            console.error('[team] Failed to fetch auth users for email merge:', err);
+        }
         const membersWithEmail = members.map(m => ({
             ...m,
             email: authUsers?.users.find(u => u.id === m.id)?.email || 'Unknown'
