@@ -69,13 +69,15 @@ export async function PATCH(
         const supabaseAdmin = await createAdminClient();
         const { data: reqData } = await supabase
             .from('access_requests')
-            .select('requester_id, status, tools(name)')
+            .select('requester_id, status, tools(name), requester:users!requester_id(full_name)')
             .eq('id', id)
             .single();
 
         if (!reqData) return NextResponse.json({ error: 'Request not found' }, { status: 404 });
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const toolName = (reqData.tools as any)?.name || 'Unknown Tool';
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const requesterName = (reqData.requester as any)?.full_name || 'Unknown User';
 
         // Execute RPC
         let rpcError = null;
@@ -91,7 +93,7 @@ export async function PATCH(
                 p_reviewer_note: reviewerNote || null,
                 p_action: auditAction,
                 p_tool_name: toolName,
-                p_requester_name: 'Requester'
+                p_requester_name: requesterName
             });
             rpcError = error;
         } else if (action === 'revoke') {

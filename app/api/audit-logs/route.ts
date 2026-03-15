@@ -47,8 +47,56 @@ export async function GET(request: Request) {
 
         if (logsResult.error) return NextResponse.json({ error: logsResult.error.message }, { status: 500 });
 
-        const logs = logsResult.data || [];
+        let logs = logsResult.data || [];
         const authUsers = authUsersResult.data;
+
+        // Backfill legacy placeholder requester names in metadata (e.g. "Requester")
+        // by looking up the current requester full name from access_requests -> users.
+        const accessRequestIdsNeedingBackfill = logs
+            .filter((log) => {
+                const metadata = (log.metadata ?? {}) as Record<string, unknown>;
+                const requesterName = typeof metadata.requester_name === 'string'
+                    ? metadata.requester_name.toLowerCase().trim()
+                    : '';
+                const isPlaceholder =
+                    requesterName === '' ||
+                    requesterName === 'requester' ||
+                    requesterName === "requester's name" ||
+                    requesterName === "requesters' name";
+                return log.entity_type === 'access_request' && isPlaceholder;
+            })
+            .map((log) => log.entity_id)
+            .filter((id): id is string => typeof id === 'string');
+
+        if (accessRequestIdsNeedingBackfill.length > 0) {
+            const { data: requestsForBackfill } = await supabase
+                .from('access_requests')
+                .select('id, requester:users!requester_id(full_name)')
+                .in('id', accessRequestIdsNeedingBackfill);
+
+            const nameByRequestId = new Map<string, string>();
+            for (const req of requestsForBackfill || []) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const fullName = (req.requester as any)?.full_name;
+                if (typeof fullName === 'string' && fullName.trim().length > 0) {
+                    nameByRequestId.set(req.id, fullName);
+                }
+            }
+
+            logs = logs.map((log) => {
+                if (log.entity_type !== 'access_request' || typeof log.entity_id !== 'string') return log;
+                const resolvedName = nameByRequestId.get(log.entity_id);
+                if (!resolvedName) return log;
+                const metadata = (log.metadata ?? {}) as Record<string, unknown>;
+                return {
+                    ...log,
+                    metadata: {
+                        ...metadata,
+                        requester_name: resolvedName,
+                    },
+                };
+            });
+        }
 
         const augmentedLogs = logs.map(log => {
             const actorEmail = authUsers?.users.find(u => u.id === log.actor_id)?.email || 'Unknown';
