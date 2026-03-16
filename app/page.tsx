@@ -81,7 +81,7 @@ export default function LandingPage() {
                 </div>
                 <h3 className="text-2xl font-bold">Pro</h3>
                 <div className="mt-4 flex items-baseline text-5xl font-extrabold tracking-tight">
-                  $49<span className="ml-1 text-xl font-medium text-indigo-200">/mo</span>
+                  ₹499<span className="ml-1 text-xl font-medium text-indigo-200">/mo</span>
                 </div>
                 <ul className="mt-8 space-y-4 flex-1">
                   <li className="flex items-center gap-3"><div className="rounded-full bg-indigo-500 p-1"><span className="text-white w-4 h-4 flex items-center justify-center font-bold text-xs">✓</span></div> Up to 25 members</li>
@@ -97,7 +97,7 @@ export default function LandingPage() {
               <div className="flex flex-col p-8 bg-white dark:bg-zinc-900/50 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm transition-all hover:shadow-md hover:border-zinc-300 dark:hover:border-zinc-700">
                 <h3 className="text-2xl font-bold">Enterprise</h3>
                 <div className="mt-4 flex items-baseline text-5xl font-extrabold tracking-tight">
-                  Custom
+                  ₹1,499<span className="ml-1 text-xl font-medium text-zinc-500">/mo</span>
                 </div>
                 <ul className="mt-8 space-y-4 flex-1">
                   <li className="flex items-center gap-3"><div className="rounded-full bg-indigo-100 dark:bg-indigo-900/50 p-1"><span className="text-indigo-600 dark:text-indigo-400 w-4 h-4 flex items-center justify-center font-bold text-xs">✓</span></div> Unlimited members</li>
