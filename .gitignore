@@ -43,3 +43,7 @@ prd.md
 *.docx
 
 debug-token
+# Sentry Config File
+.env.sentry-build-plugin
+
+.vscode

@@ -1,7 +1,0 @@
-﻿app/api/auth/signup/route.ts(36,60): error TS2339: Property 'errors' does not exist on type 'ZodError<{ fullName: string; email: string; organisationName: string; password: string; }>'.
-app/api/invitations/[token]/accept/route.ts(22,60): error TS2339: Property 'errors' does not exist on type 'ZodError<{ fullName: string; password: string; }>'.
-app/api/requests/[id]/[action]/route.ts(68,41): error TS2339: Property 'name' does not exist on type '{ name: any; }[]'.
-app/api/requests/route.ts(63,60): error TS2339: Property 'errors' does not exist on type 'ZodError<{ tool_id: string; reason?: string | undefined; }>'.
-app/api/tools/[id]/route.ts(27,60): error TS2339: Property 'errors' does not exist on type 'ZodError<{ name?: string | undefined; description?: string | undefined; category?: string | undefined; is_active?: boolean | undefined; }>'.
-app/api/tools/route.ts(40,60): error TS2339: Property 'errors' does not exist on type 'ZodError<{ name: string; is_active: boolean; description?: string | undefined; category?: string | undefined; }>'.
-app/api/tools/route.ts(57,43): error TS2339: Property 'max_tools' does not exist on type '{ max_tools: any; }[]'.
