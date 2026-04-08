@@ -5,7 +5,7 @@ export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen bg-zinc-50 dark:bg-zinc-950">
       <header className="px-4 lg:px-6 h-16 flex items-center border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md sticky top-0 z-50 transition-all">
-        <Link className="flex items-center justify-center gap-2 transition-transform hover:scale-105" href="#">
+        <Link className="flex items-center justify-center gap-2 transition-transform hover:scale-105" href="/">
           <div className="bg-indigo-600 p-1.5 rounded-md flex shrink-0 shadow-sm shadow-indigo-600/20">
             <div className="w-4 h-4 rounded-sm border-2 border-white" />
           </div>
@@ -46,6 +46,37 @@ export default function LandingPage() {
                     Sign In
                   </Button>
                 </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="features" className="w-full py-16 md:py-24 lg:py-28 bg-zinc-50 dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800">
+          <div className="container px-4 md:px-6 mx-auto">
+            <div className="text-center mb-14 space-y-4">
+              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Built for secure access workflows</h2>
+              <p className="text-zinc-500 dark:text-zinc-400 max-w-2xl mx-auto text-lg">
+                Everything your team needs to request, approve, and audit internal tool access without spreadsheets or manual follow-ups.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+              <div className="rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 p-6 shadow-sm">
+                <h3 className="text-xl font-semibold">Approval queues</h3>
+                <p className="mt-3 text-zinc-600 dark:text-zinc-400">
+                  Route requests to the right owner, track every status change, and eliminate approval bottlenecks.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 p-6 shadow-sm">
+                <h3 className="text-xl font-semibold">Tool inventory</h3>
+                <p className="mt-3 text-zinc-600 dark:text-zinc-400">
+                  Maintain a central list of tools, permissions, and access rules so requests stay consistent and compliant.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 p-6 shadow-sm">
+                <h3 className="text-xl font-semibold">Audit-ready history</h3>
+                <p className="mt-3 text-zinc-600 dark:text-zinc-400">
+                  Capture who requested access, who approved it, and when changes were made with immutable event history.
+                </p>
               </div>
             </div>
           </div>
@@ -115,10 +146,10 @@ export default function LandingPage() {
       <footer className="flex flex-col gap-2 sm:flex-row py-8 w-full shrink-0 items-center px-4 md:px-6 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950">
         <p className="text-sm text-zinc-500 dark:text-zinc-400">© 2026 ITAM Inc. All rights reserved.</p>
         <nav className="sm:ml-auto flex gap-6">
-          <Link className="text-sm text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50 transition-colors" href="#">
+          <Link className="text-sm text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50 transition-colors" href="/terms">
             Terms of Service
           </Link>
-          <Link className="text-sm text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50 transition-colors" href="#">
+          <Link className="text-sm text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50 transition-colors" href="/privacy">
             Privacy
           </Link>
         </nav>
