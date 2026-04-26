@@ -16,12 +16,13 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const supabase = createClient();
 
     async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         setLoading(true);
         setError(null);
+
+        const supabase = createClient();
 
         const formData = new FormData(e.currentTarget);
         const email = formData.get("email") as string;
@@ -49,6 +50,8 @@ export default function LoginPage() {
         try {
             setGoogleLoading(true);
             setError(null);
+
+            const supabase = createClient();
 
             const { error: authError } = await supabase.auth.signInWithOAuth({
                 provider: 'google',

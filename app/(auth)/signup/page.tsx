@@ -13,7 +13,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function SignUpPage() {
     const router = useRouter();
-    const supabase = createClient();
     const [loading, setLoading] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -22,6 +21,9 @@ export default function SignUpPage() {
         try {
             setGoogleLoading(true);
             setError(null);
+
+            const supabase = createClient();
+
             const { error: authError } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
@@ -44,6 +46,8 @@ export default function SignUpPage() {
         const fullName = formData.get("fullName") as string;
         const email = formData.get("email") as string;
         const password = formData.get("password") as string;
+
+        const supabase = createClient();
 
         try {
             const response = await fetch("/api/auth/signup", {
