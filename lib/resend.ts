@@ -112,3 +112,55 @@ export async function sendRequestNotificationEmail({
         return { success: false, error };
     }
 }
+
+export async function sendPaymentReceiptEmail({
+    email,
+    plan,
+    amount,
+    currency,
+    orderId,
+    paymentId,
+    tenantName,
+}: {
+    email: string;
+    plan: 'pro' | 'enterprise';
+    amount: number;
+    currency: string;
+    orderId: string;
+    paymentId: string;
+    tenantName: string;
+}) {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const planLink = `${appUrl}/dashboard/plan`;
+    const amountValue = Number.isFinite(amount) ? amount : 0;
+    const amountText = currency === 'INR'
+        ? `₹${(amountValue / 100).toFixed(2)}`
+        : `${(amountValue / 100).toFixed(2)} ${currency}`;
+    const planLabel = plan === 'pro' ? 'Pro' : 'Enterprise';
+
+    try {
+        const transporter = createTransport();
+        const data = await transporter.sendMail({
+            from: `ITAM <${process.env.GMAIL_USER}>`,
+            to: email,
+            subject: `Payment receipt for ITAM ${planLabel} plan`,
+            html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+          <h2 style="color: #4f46e5;">Payment receipt</h2>
+          <p>Thank you for upgrading <strong>${tenantName}</strong> to the <strong>${planLabel}</strong> plan.</p>
+          <div style="margin: 20px 0; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px;">
+            <p style="margin: 4px 0;"><strong>Amount:</strong> ${amountText}</p>
+            <p style="margin: 4px 0;"><strong>Order ID:</strong> ${orderId}</p>
+            <p style="margin: 4px 0;"><strong>Payment ID:</strong> ${paymentId}</p>
+          </div>
+          <p>You can view your plan details here: <a href="${planLink}">${planLink}</a></p>
+          <p style="font-size: 12px; color: #6b7280;">If you did not request this payment, please contact support.</p>
+        </div>
+      `,
+        });
+        return { success: true, data };
+    } catch (error) {
+        console.error('Failed to send payment receipt email:', error);
+        return { success: false, error };
+    }
+}
